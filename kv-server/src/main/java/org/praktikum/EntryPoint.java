@@ -16,6 +16,10 @@ public class EntryPoint {
             case "-c" -> flags[6] = value;
             case "-s" -> flags[7] = value;
             case "-h" -> printHelpText();
+
+            //TODO: hier flag einfügen für die Anzahl an Buckets (zumindest initially)
+            //TODO: hier flag einfügen für die Offload threshold
+
             default -> printInvalidInput(flags);
         }
     }
@@ -71,6 +75,8 @@ public class EntryPoint {
                 "-s <strategy>",
                 "-s FIFO"
         );
+        //TODO: hier argument help einfügen für die neuen flags (number of buckets + threshold percentage)
+        // falls wir default werte setzen wollen, müssen wir die hier auch beschreiben (evtl. default werte based auf unserem optimum)
     }
 
     private static void printArgumentHelp(String command, String description, String usage, String example, String... defaultValue) {
@@ -96,6 +102,9 @@ public class EntryPoint {
         //Set default value for address
         flags[1] = "127.0.0.1";
         flags[4] = "logs/server.log";
+
+        //TODO: default werte hier setzen für die neuen flags, falls wir das so machen
+
         //Parse CLI parameters
         for (int i = 0; i < args.length; i++) {
             String s = args[i];

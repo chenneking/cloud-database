@@ -2,6 +2,7 @@ package org.praktikum;
 
 import org.praktikum.communication.MessageHandler;
 import org.praktikum.resources.ConsistentHashing;
+import org.praktikum.resources.FrequencyTable;
 import org.praktikum.resources.RingList;
 import org.praktikum.storage.*;
 import sun.misc.Signal;
@@ -35,6 +36,9 @@ public class KVServer {
     private final ConsistentHashing hashing;
     private final ArrayList<ClientConnection> clientConnections = new ArrayList<>();
     private final Random random;
+
+    private final FrequencyTable frequencyTable;
+    // TODO: Konstruktor braucht die neuen flags
     public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy) {
         this.port = port;
         this.isRunning = false;
@@ -54,6 +58,7 @@ public class KVServer {
 
             this.ringList = new RingList();
             this.random = new Random(port);
+            this.frequencyTable = new FrequencyTable();
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new RuntimeException(e);
         }

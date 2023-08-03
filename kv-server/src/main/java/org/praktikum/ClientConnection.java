@@ -150,6 +150,9 @@ public class ClientConnection implements Runnable {
                     replicaStore.saveData(data, false);
                 }
             }
+            case "get_frequency_table" -> {
+                // TODO: return pretty-printed frequency table here
+            }
             default -> {
                 error();
                 KVServer.log.info("Received unknown command: " + clientRequest);
