@@ -39,7 +39,7 @@ public class KVServer {
 
     private final FrequencyTable frequencyTable;
     // TODO: Konstruktor braucht die neuen flags
-    public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy) {
+    public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy, int numberOfBuckets, int offloadThreshold) {
         this.port = port;
         this.isRunning = false;
         this.address = address;
@@ -58,7 +58,7 @@ public class KVServer {
 
             this.ringList = new RingList();
             this.random = new Random(port);
-            this.frequencyTable = new FrequencyTable();
+            this.frequencyTable = new FrequencyTable(numberOfBuckets, offloadThreshold);
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -368,5 +368,9 @@ public class KVServer {
             log.warning("Error while closing server socket");
         }
         log.info("Stopped server");
+    }
+    public static void main(String[] args) {
+        KVServer kv = new KVServer(45263,"127.0.0.1","0.0.0.0:44331","123","123",Level.ALL,0,"FIFO", 0 ,0);
+        kv.runServer();
     }
 }

@@ -4,6 +4,7 @@ import org.praktikum.communication.MessageHandler;
 import org.praktikum.resources.ConsistentHashing;
 import org.praktikum.resources.PutResult;
 import org.praktikum.resources.RingList;
+import org.praktikum.resources.UsageMetrics;
 import org.praktikum.storage.KVStore;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ public class ClientConnection implements Runnable {
     private final ConsistentHashing hashing;
     private final KVServer kvServer;
     private final Socket clientSocket;
+    private final UsageMetrics usageMetrics;
 
     public ClientConnection(Socket clientSocket, ConsistentHashing hashing, KVServer kvServer) {
         this.storageUnit = kvServer.getStore();
@@ -29,6 +31,7 @@ public class ClientConnection implements Runnable {
         this.hashing = hashing;
         this.kvServer = kvServer;
         this.clientSocket = clientSocket;
+        this.usageMetrics = new UsageMetrics(0);
     }
 
 
@@ -151,7 +154,7 @@ public class ClientConnection implements Runnable {
                 }
             }
             case "get_frequency_table" -> {
-                // TODO: return pretty-printed frequency table here
+                messageHandler.send(usageMetrics.toString());
             }
             default -> {
                 error();
@@ -246,10 +249,12 @@ public class ClientConnection implements Runnable {
         if (status == PutResult.SUCCESS) {
             KVServer.log.info("Successful PUT: " + key + ":" + value);
             messageHandler.send("put_success " + key);
+            usageMetrics.addOperation();
         }
         else if (status == PutResult.UPDATE) {
             KVServer.log.info("Successful UPDATE: " + key + ":" + value);
             messageHandler.send("put_update " + key);
+            usageMetrics.addOperation();
         }
         else {
             KVServer.log.info("Error during PUT: " + key + ":" + value);
@@ -309,6 +314,7 @@ public class ClientConnection implements Runnable {
             messageHandler.send("get_error " + key);
         }
         else {
+            usageMetrics.addOperation();
             KVServer.log.info("Successful GET: " + key + ":" + value);
             messageHandler.send("get_success " + key + " " + value);
         }
@@ -341,6 +347,7 @@ public class ClientConnection implements Runnable {
         if (value != null) {
             KVServer.log.info("Successful DELETE: " + key + ":" + value);
             messageHandler.send("delete_success " + key + " " + value);
+            usageMetrics.addOperation();
         }
         else {
             KVServer.log.info("Error during DELETE: " + key);

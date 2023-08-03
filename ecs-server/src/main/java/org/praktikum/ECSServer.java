@@ -156,4 +156,8 @@ public class ECSServer {
             log.warning("Error while closing ECS socket");
         }
     }
+    public static void main(String[] args) {
+        ECSServer ecsServer = new ECSServer(44331, "0.0.0.0", "123",Level.ALL);
+        ecsServer.runServer();
+    }
 }

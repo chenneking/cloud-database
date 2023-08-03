@@ -21,8 +21,6 @@ public class PersistentStorage {
         this.filename = filename;
         initializePersistentStorage();
     }
-
-    // @ToDo integrate threads
     public KVPair<String, String> get(String key) {
         try {
             Scanner input = new Scanner(new File("/" + storageLocation + "/" + filename));

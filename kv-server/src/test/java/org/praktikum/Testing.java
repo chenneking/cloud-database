@@ -13,11 +13,11 @@ public class Testing {
 
     public void test1() {
 
-        KVServer kv1 = new KVServer(8001,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server1.log", Level.ALL,100,"FIFO");
-        KVServer kv2 = new KVServer(8002,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server2.log", Level.ALL,100,"FIFO");
-        KVServer kv3 = new KVServer(8003,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server3.log", Level.ALL,100,"FIFO");
-        KVServer kv4 = new KVServer(8004,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server4.log", Level.ALL,100,"FIFO");
-        KVServer kv5 = new KVServer(8004,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server5.log", Level.ALL,100,"FIFO");
+        KVServer kv1 = new KVServer(8001,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server1.log", Level.ALL,100,"FIFO",0,0);
+        KVServer kv2 = new KVServer(8002,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server2.log", Level.ALL,100,"FIFO",0,0);
+        KVServer kv3 = new KVServer(8003,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server3.log", Level.ALL,100,"FIFO",0,0);
+        KVServer kv4 = new KVServer(8004,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server4.log", Level.ALL,100,"FIFO",0,0);
+        KVServer kv5 = new KVServer(8004,"127.0.0.1","127.0.0.1:9999","/Users/carl/IdeaProjects/Milestone3/data","/Users/carl/IdeaProjects/Milestone3/kv-server/logs/server5.log", Level.ALL,100,"FIFO",0,0);
 
         KVServer[] kvServers = new KVServer[]{kv1, kv2, kv3, kv4, kv5};
 

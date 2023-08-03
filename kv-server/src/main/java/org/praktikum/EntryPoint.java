@@ -128,7 +128,8 @@ public class EntryPoint {
             int port = Integer.parseInt(flags[0]);
             int cacheSize = Integer.parseInt(flags[6]);
             Level logLevel = Level.parse(flags[5]);
-            KVServer KVServer = new KVServer(port, flags[1], flags[2], flags[3], flags[4], logLevel, cacheSize, flags[7]);
+            //@ToDo replace with proper flags
+            KVServer KVServer = new KVServer(port, flags[1], flags[2], flags[3], flags[4], logLevel, cacheSize, flags[7], 0 ,0);
             KVServer.runServer();
         } catch (Exception e) {
             System.out.println("An error occurred while starting up the server");

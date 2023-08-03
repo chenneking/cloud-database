@@ -178,7 +178,15 @@ public class Client implements SignalHandler {
                 requestKeyRangeRead();
                 handleServerResponse(tokens);
             }
+            case "get_frequency_table" ->{
+                if (! isConnected) {
+                    print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
+                    break;
+                }
+                sendString("get_frequency_table");
+                handleServerResponse(tokens);
 
+            }
             case "logLevel" -> {
                 if (tokens.length > 2) {
                     error();
