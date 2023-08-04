@@ -154,6 +154,9 @@ public class ClientConnection implements Runnable {
                 }
             }
             case "get_frequency_table" -> {
+                messageHandler.send(kvServer.getFrequencyTable().toString());
+            }
+            case "get_usage_metrics" -> {
                 messageHandler.send(usageMetrics.toString());
             }
             default -> {

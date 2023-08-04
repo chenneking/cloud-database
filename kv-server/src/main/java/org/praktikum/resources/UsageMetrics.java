@@ -21,7 +21,7 @@ public class UsageMetrics{
         Thread resetThread = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(30000);
                     operationsLast30s = 0;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -31,10 +31,13 @@ public class UsageMetrics{
         resetThread.start();
     }
 
-    //@TODO: 03.08.2023  write fancy to String
+    public String info(){
+        return getTotalOperations() + "-"+ getOperationsLast30s();
+    }
     @Override
     public String toString(){
-        return getTotalOperations() + "-"+ getOperationsLast30s();
+        return "the total amount of operations on this server is: " + getTotalOperations() + "\n"
+                +"in the last 30 seconds the server recieved: " + getOperationsLast30s() +" operations";
     }
     public int getTotalOperations() {
         return totalOperations;

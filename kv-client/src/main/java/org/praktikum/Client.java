@@ -187,6 +187,15 @@ public class Client implements SignalHandler {
                 handleServerResponse(tokens);
 
             }
+            case "get_usage_metrics" ->{
+                if (! isConnected) {
+                    print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
+                    break;
+                }
+                sendString("get_usage_metrics");
+                handleServerResponse(tokens);
+
+            }
             case "logLevel" -> {
                 if (tokens.length > 2) {
                     error();
