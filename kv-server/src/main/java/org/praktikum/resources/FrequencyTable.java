@@ -77,6 +77,6 @@ public class FrequencyTable {
     // TODO: this method should return ascii string of pretty-printed frequency table that can be sent to kv-client
     @Override
     public String toString() {
-        return "";
+        return "" +totalBucketSize;
     }
 }

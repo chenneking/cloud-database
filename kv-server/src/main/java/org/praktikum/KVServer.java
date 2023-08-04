@@ -374,7 +374,7 @@ public class KVServer {
     }
 
     public static void main(String[] args) {
-        KVServer kv = new KVServer(45263,"127.0.0.1","0.0.0.0:44331","123","123",Level.ALL,0,"FIFO", 0 ,0);
+        KVServer kv = new KVServer(45263,"127.0.0.1","0.0.0.0:44331","123","123",Level.ALL,0,"FIFO", 5 ,30);
         kv.runServer();
     }
 }

@@ -79,8 +79,12 @@ public class ClientConnection implements Runnable {
                         builder.append(" ");
                     }
                 }
-
                 put(tokens[1], builder.toString());
+                try {
+                    offloadKeys();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             case "get" -> {
                 if (tokens.length < 2) {
@@ -165,7 +169,6 @@ public class ClientConnection implements Runnable {
             }
         }
     }
-
     /**
      * Sends error message to the client
      */
@@ -253,11 +256,13 @@ public class ClientConnection implements Runnable {
             KVServer.log.info("Successful PUT: " + key + ":" + value);
             messageHandler.send("put_success " + key);
             usageMetrics.addOperation();
+            //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
         }
         else if (status == PutResult.UPDATE) {
             KVServer.log.info("Successful UPDATE: " + key + ":" + value);
             messageHandler.send("put_update " + key);
             usageMetrics.addOperation();
+            //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
         }
         else {
             KVServer.log.info("Error during PUT: " + key + ":" + value);
@@ -285,7 +290,30 @@ public class ClientConnection implements Runnable {
         }
 
     }
+    private synchronized void offloadKeys() throws IOException {
+        RingList.Node node = kvServer.getRingList().findByIPandPort(kvServer.getAddress(), Integer.toString(kvServer.getPort()));
+        RingList.Node nodeNext = node.getNext();
+        RingList.Node nodePrev = node.getPrev();
+        Socket socketNext = new Socket(nodeNext.getIP(), Integer.parseInt(nodeNext.getPort()));
+        Socket socketPrev = new Socket(nodeNext.getIP(), Integer.parseInt(nodeNext.getPort()));
+        MessageHandler messageHandlerNext = new MessageHandler(socketNext);
+        MessageHandler messageHandlerPrev = new MessageHandler(socketPrev);
 
+        messageHandlerNext.send("get_usage_metrics");
+        //skips over the welcome message
+        messageHandlerNext.receive();
+        String nextLoad = new String(messageHandlerNext.receive(), StandardCharsets.UTF_8);
+        messageHandlerPrev.send("get_usage_metrics");
+        messageHandlerPrev.receive();
+        String prevLoad = new String(messageHandlerPrev.receive(), StandardCharsets.UTF_8);
+        System.out.println("-----next load: " + nextLoad);
+        System.out.println("-----prev Load: " + prevLoad);
+        System.out.println("-----current Server load: " + usageMetrics.toString());
+        messageHandlerNext.close();
+        messageHandlerPrev.close();
+        socketNext.close();
+        socketPrev.close();
+    }
     /**
      * Calls the get method from the kvStore and sends the according message to the Client
      *
@@ -369,6 +397,7 @@ public class ClientConnection implements Runnable {
                 messageHandlerNext.send("server_delete " + kvServer.getAddress() + " " + kvServer.getPort() + " " + key);
                 System.out.println("Sent: server_delete " + key);
                 messageHandlerNextNext.send("server_delete " + kvServer.getAddress() + " " + kvServer.getPort() + " " + key);
+
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

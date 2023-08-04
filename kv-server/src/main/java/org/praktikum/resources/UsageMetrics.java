@@ -32,7 +32,7 @@ public class UsageMetrics{
     }
 
     public String info(){
-        return getTotalOperations() + "-"+ getOperationsLast30s();
+        return ""+getOperationsLast30s();
     }
     @Override
     public String toString(){
