@@ -1,29 +1,70 @@
 package org.praktikum.resources;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeMap;
+
 public class FrequencyTable {
-    // die number of buckets darf nicht final sein, es kann ja sein, dass wir von z.B 5 buckets 2 abgeben, und dann nur noch 3 haben!
     private int numberOfBuckets;
     private int offloadThreshold;
 
-    // Nimm hier am besten eine Liste (da unsere anzahl an buckets nicht statisch ist) die sorted ist (also vllcht. sowas wie ne arraylist?)
-
+    //each array list represents the bucket for the keyRange saved in the String
+    private ArrayList<Bucket> buckets;
     public FrequencyTable(int numberOfBuckets, int offloadThreshold) {
         this.numberOfBuckets = numberOfBuckets;
-        //TODO Exception werfen wenn offloadThreshhold < 0 oder > 100
         this.offloadThreshold = offloadThreshold;
+        if(offloadThreshold > 100 || offloadThreshold < 0){
+            throw new NumberFormatException();
+        }
+    }
+    public void createBuckets(String keyRange){
+        buckets = new ArrayList<>();
+        // ToDO: implement splitting logic of the client here
     }
 
-    // TODO: methode nimmt jegliche operation an (ob wir alle puts, deletes und gets loggen ist noch unklar) und sortiert den dann in die frequency table ein
-    public void addOperation(String type, String hash) {
-
+    public void addToTable(String key, String hash) {
+        for (Bucket bucket : buckets) {
+            bucket.insert(key, hash);
+        }
     }
-
-    // TODO: Methode die basierend auf der Frequency table berechnet welche Keyrange abgegeben werden soll
+    public void deleteFromTable(String key, String hash){
+        for (Bucket bucket : buckets) {
+            bucket.delete(key, hash);
+        }
+    }
     // lower: von links, nicht lower: von rechts
-    public String[] calculateOffloadKeyrange(boolean lower) {
-        return null;
-    }
+    public String [] calculateOffloadKeyRange(boolean lower) {
+        String startRange = null;
+        String endRange = null;
+        int totalBucketsize = 0;
+        for (Bucket bucket : buckets) {
+            totalBucketsize += bucket.size();
+        }
+        int bucketIndex = 0;
+        if(lower){
+            startRange = buckets.get(0).getStartRange();
+            for (int i = 0; i < buckets.size(); i++) {
+                if((buckets.get(i).size()/totalBucketsize) * 100 >= offloadThreshold){
+                    break;
+                }
+                bucketIndex++;
+            }
+            endRange = buckets.get(bucketIndex).getEndRange();
+        }
+        else{
+            startRange = buckets.get(buckets.size() -1).getEndRange();
+            for(int j = buckets.size()-1; j >= 0; j--){
+                if((buckets.get(j).size()/totalBucketsize) * 100 >= offloadThreshold){
+                    break;
+                }
+                bucketIndex++;
+            }
+            endRange = buckets.get(bucketIndex).getStartRange();
 
+        }
+        return new String[]{startRange, endRange};
+    }
     // TODO: this method should return ascii string of pretty-printed frequency table that can be sent to kv-client
     @Override
     public String toString() {

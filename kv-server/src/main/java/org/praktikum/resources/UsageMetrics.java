@@ -34,7 +34,7 @@ public class UsageMetrics{
     //@TODO: 03.08.2023  write fancy to String
     @Override
     public String toString(){
-        return "total operations: " +getTotalOperations() + " - operations last 30Seconds "+ getOperationsLast30s();
+        return getTotalOperations() + "-"+ getOperationsLast30s();
     }
     public int getTotalOperations() {
         return totalOperations;

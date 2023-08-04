@@ -38,7 +38,6 @@ public class KVServer {
     private final Random random;
 
     private final FrequencyTable frequencyTable;
-    // TODO: Konstruktor braucht die neuen flags
     public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy, int numberOfBuckets, int offloadThreshold) {
         this.port = port;
         this.isRunning = false;
