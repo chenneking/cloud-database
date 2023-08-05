@@ -147,7 +147,7 @@ public class FrequencyTable {
 
             builder.append(bucket.getStartRange(), 0, NUMBER_OF_KEYRANGE_CHARS_TO_INCLUDE_IN_PRINT);
             builder.append(" to ");
-            builder.append(bucket.getStartRange(), 0, NUMBER_OF_KEYRANGE_CHARS_TO_INCLUDE_IN_PRINT);
+            builder.append(bucket.getEndRange(), 0, NUMBER_OF_KEYRANGE_CHARS_TO_INCLUDE_IN_PRINT);
             builder.append(" : ");
             builder.append(hashes);
             if (numHashes > 0) {

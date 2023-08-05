@@ -87,7 +87,7 @@ public class Testing {
         FrequencyTable frequencyTable = new FrequencyTable(5, 50);
         assertNull(frequencyTable.getBuckets());
         // we can only create 3 buckets out of these
-        frequencyTable.createBuckets("0000000000000000","0000000000000003");
+        frequencyTable.createBuckets("00000045 0000000000","0000000000000003");
         ArrayList<Bucket> createdBuckets = frequencyTable.getBuckets();
         assertEquals(3, createdBuckets.size());
         for (int i = 0; i < createdBuckets.size(); i++) {
@@ -109,4 +109,12 @@ public class Testing {
         frequencyTable.addToTable("ab", hashing.getMD5Hash("ab"));
         System.out.println(frequencyTable);
     }
+
+    @Test
+    public void danaiSpielHierRum() {
+        FrequencyTable frequencyTable = new FrequencyTable(5, 50);
+        frequencyTable.createBuckets("0000000000000000","4000000000000000");
+        System.out.println(frequencyTable);
+    }
 }
+
