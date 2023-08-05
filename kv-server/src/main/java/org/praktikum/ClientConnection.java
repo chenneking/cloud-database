@@ -81,7 +81,7 @@ public class ClientConnection implements Runnable {
                 }
                 put(tokens[1], builder.toString());
                 try {
-                    offloadKeys();
+                    determineOffloadPartner();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -290,30 +290,42 @@ public class ClientConnection implements Runnable {
         }
 
     }
-    private synchronized void offloadKeys() throws IOException {
+    private synchronized void determineOffloadPartner() throws IOException {
         RingList.Node node = kvServer.getRingList().findByIPandPort(kvServer.getAddress(), Integer.toString(kvServer.getPort()));
         RingList.Node nodeNext = node.getNext();
         RingList.Node nodePrev = node.getPrev();
         Socket socketNext = new Socket(nodeNext.getIP(), Integer.parseInt(nodeNext.getPort()));
-        Socket socketPrev = new Socket(nodeNext.getIP(), Integer.parseInt(nodeNext.getPort()));
+        Socket socketPrev = new Socket(nodePrev.getIP(), Integer.parseInt(nodePrev.getPort()));
         MessageHandler messageHandlerNext = new MessageHandler(socketNext);
         MessageHandler messageHandlerPrev = new MessageHandler(socketPrev);
 
         messageHandlerNext.send("get_usage_metrics");
         //skips over the welcome message
         messageHandlerNext.receive();
-        String nextLoad = new String(messageHandlerNext.receive(), StandardCharsets.UTF_8);
+        int nextLoad = Integer.parseInt(new String(messageHandlerNext.receive(), StandardCharsets.UTF_8));
         messageHandlerPrev.send("get_usage_metrics");
         messageHandlerPrev.receive();
-        String prevLoad = new String(messageHandlerPrev.receive(), StandardCharsets.UTF_8);
-        System.out.println("-----next load: " + nextLoad);
+        int prevLoad = Integer.parseInt(new String(messageHandlerPrev.receive(), StandardCharsets.UTF_8));
+        /*System.out.println("-----next load: " + nextLoad);
         System.out.println("-----prev Load: " + prevLoad);
         System.out.println("-----current Server load: " + usageMetrics.toString());
         messageHandlerNext.close();
         messageHandlerPrev.close();
         socketNext.close();
         socketPrev.close();
+        */
+        //@TODO: 05.08.2023 add variable instead of fixed value
+        String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(true);
+        offloadKeys(keyRange[0],keyRange[1]);
+        changeKeyRange(keyRange[0],keyRange[1]);
     }
+    private synchronized void offloadKeys(String startRange, String endRange){
+
+    }
+    private synchronized void changeKeyRange(String startRange, String endRang){
+
+    }
+
     /**
      * Calls the get method from the kvStore and sends the according message to the Client
      *

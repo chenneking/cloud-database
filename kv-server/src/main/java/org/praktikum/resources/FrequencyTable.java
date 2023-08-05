@@ -84,7 +84,6 @@ public class FrequencyTable {
         }
     }
     // lower: von links, nicht lower: von rechts
-    // TODO: add check that under no circumstances we wipe all buckets from the server!
     public String [] calculateOffloadKeyRange(boolean lower) {
         String startRange;
         String endRange;
@@ -95,7 +94,10 @@ public class FrequencyTable {
                 if ((bucket.size() / totalBucketSize) * 100 >= offloadThreshold) {
                     break;
                 }
-                bucketIndex++;
+                if(bucketIndex < buckets.size()-1){
+                    bucketIndex++;
+                }
+
             }
             endRange = buckets.get(bucketIndex).getEndRange();
         }
@@ -105,7 +107,10 @@ public class FrequencyTable {
                 if((buckets.get(j).size()/totalBucketSize) * 100 >= offloadThreshold){
                     break;
                 }
-                bucketIndex++;
+                if(bucketIndex < buckets.size()-1){
+                    bucketIndex++;
+                }
+
             }
             endRange = buckets.get(bucketIndex).getStartRange();
         }

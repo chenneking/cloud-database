@@ -38,7 +38,6 @@ public class PingCommunication implements Runnable {
 
             while (true) {
                 messageHandler.send("ping_request");
-                // TODO: figure out why this is here?
                 Thread.sleep(700);
                 int receivedSize = messageHandler.size();
                 if (receivedSize <= 0) {
