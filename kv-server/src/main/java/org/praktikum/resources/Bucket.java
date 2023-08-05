@@ -42,8 +42,18 @@ public class Bucket {
         return endRange;
     }
 
-    //@ToDo implement logic
     private boolean isRightBucket(String hash){
-        return true;
+        if (getStartRange().compareTo(hash) < 0 && getEndRange().compareTo(hash) >= 0) {
+            return true;
+        }
+        else if (getStartRange().compareTo(getEndRange()) >= 0) {
+            if (getStartRange().compareTo(hash) < 0 && getEndRange().compareTo(hash) <= 0) {
+                return true;
+            }
+            else if (getStartRange().compareTo(hash) > 0 && getEndRange().compareTo(hash) >= 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }
