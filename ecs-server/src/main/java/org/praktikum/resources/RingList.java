@@ -116,8 +116,38 @@ public class RingList {
      * @return the removed node
      */
     public synchronized Node remove(String IP, String port) {
-        String hashString = getMD5Hash(IP, port);
-        return remove(hashString);
+        if (size == 0) {
+            return null;
+        }
+        else if (size == 1) {
+            Node node = head;
+            head = null;
+            size--;
+            return node;
+        }
+
+        Node toBeRemovedNode = find(IP, port);
+
+        if (size == 2) {
+            Node prev = toBeRemovedNode.getPrev();
+            prev.setNext(prev);
+            prev.setPrev(prev);
+            prev.setEndRange(toBeRemovedNode.getEndRange());
+            if (toBeRemovedNode == head) {
+                head = prev;
+            }
+        }
+        else {
+            toBeRemovedNode.getPrev().setNext(toBeRemovedNode.getNext());
+            toBeRemovedNode.getPrev().setEndRange(toBeRemovedNode.getEndRange());
+            toBeRemovedNode.getNext().setPrev(toBeRemovedNode.getPrev());
+
+            if (toBeRemovedNode == head) {
+                head = toBeRemovedNode.getPrev();
+            }
+        }
+        size--;
+        return toBeRemovedNode;
     }
 
     /**
@@ -153,8 +183,27 @@ public class RingList {
         return null;
     }
 
+    public Node find(String address, String port) {
+        if (size == 0) {
+            return null;
+        }
+        // Special Case when there is only one server, as it covers ALL values. I.e. no handling of inclusive/exclusive bounds.
+        else if (size == 1) {
+            return head;
+        }
+
+        Node node = head;
+        do {
+            if (node.getPort().equals(port) && node.getIP().equals(address)) {
+                return node;
+            }
+            node = node.getNext();
+        } while (node != head);
+        return null;
+    }
+
     public synchronized void updateKeyRanges(String ip, String port, String startRange, String endRange) {
-        Node node = find(getMD5Hash(ip, port));
+        Node node = find(ip, port);
         // Update startRange
         node.setStartRange(startRange);
         node.getPrev().setEndRange(startRange);

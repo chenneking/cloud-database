@@ -122,6 +122,7 @@ public class KVServer {
                 }
                 this.startRange = server.getStartRange();
                 this.endRange = server.getEndRange();
+                this.frequencyTable.updateBuckets(startRange, endRange);
             }
             boolean isReplicated = ringList.getSize() > 2;
             if (isReplicated && server != null) {

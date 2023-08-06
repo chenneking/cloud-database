@@ -23,6 +23,7 @@ public class ClientConnection implements Runnable {
     private final KVServer kvServer;
     private final Socket clientSocket;
     private final UsageMetrics usageMetrics;
+    private final static int OPERATION_COUNT_OFFLOAD_THRESHOLD = 3000;
 
     public ClientConnection(Socket clientSocket, ConsistentHashing hashing, KVServer kvServer) {
         this.storageUnit = kvServer.getStore();
@@ -81,8 +82,7 @@ public class ClientConnection implements Runnable {
                 }
                 put(tokens[1], builder.toString());
                 try {
-                    //ToDo replace with actual variable instead of arbitrary value
-                    if(usageMetrics.getOperationsLast30s()  > 30){
+                    if(usageMetrics.getOperationsLast30s() > OPERATION_COUNT_OFFLOAD_THRESHOLD){
                         offloadKeys();
                     }
                 } catch (IOException e) {
@@ -95,6 +95,13 @@ public class ClientConnection implements Runnable {
                     break;
                 }
                 get(tokens[1]);
+                try {
+                    if(usageMetrics.getOperationsLast30s() > OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                        offloadKeys();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             case "delete" -> {
                 if (tokens.length < 2 || tokens.length > 3) {
@@ -102,6 +109,13 @@ public class ClientConnection implements Runnable {
                     break;
                 }
                 delete(tokens[1]);
+                try {
+                    if(usageMetrics.getOperationsLast30s() > OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                        offloadKeys();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             case "save_data" -> {
                 String[] dataToSend = Arrays.copyOfRange(tokens, 1, tokens.length);
@@ -161,7 +175,7 @@ public class ClientConnection implements Runnable {
                 }
             }
             case "get_frequency_table" -> {
-                messageHandler.send(kvServer.getFrequencyTable().toString());
+                messageHandler.send("\n"+kvServer.getFrequencyTable().toString());
             }
             case "get_usage_metrics" -> {
                 messageHandler.send(usageMetrics.info());
@@ -261,12 +275,12 @@ public class ClientConnection implements Runnable {
             KVServer.log.info("Successful PUT: " + key + ":" + value);
             messageHandler.send("put_success " + key);
             usageMetrics.addOperation();
-            //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
+            kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
         } else if (status == PutResult.UPDATE) {
             KVServer.log.info("Successful UPDATE: " + key + ":" + value);
             messageHandler.send("put_update " + key);
             usageMetrics.addOperation();
-            //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
+            kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
         } else {
             KVServer.log.info("Error during PUT: " + key + ":" + value);
             messageHandler.send("put_error");
@@ -377,6 +391,7 @@ public class ClientConnection implements Runnable {
         }
         else {
             usageMetrics.addOperation();
+            kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
             KVServer.log.info("Successful GET: " + key + ":" + value);
             messageHandler.send("get_success " + key + " " + value);
         }
@@ -410,6 +425,7 @@ public class ClientConnection implements Runnable {
             KVServer.log.info("Successful DELETE: " + key + ":" + value);
             messageHandler.send("delete_success " + key + " " + value);
             usageMetrics.addOperation();
+            kvServer.getFrequencyTable().deleteFromTable(key, hashing.getMD5Hash(key));
         }
         else {
             KVServer.log.info("Error during DELETE: " + key);

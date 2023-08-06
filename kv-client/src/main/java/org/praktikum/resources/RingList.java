@@ -26,8 +26,10 @@ public class RingList {
      * @param port
      * @return the new node
      */
-    public synchronized Node add(String IP, String port) {
-        String hashString = getMD5Hash(IP, port);
+    public synchronized Node add(String IP, String port, String hashString) {
+        if (hashString == null){
+            hashString = getMD5Hash(IP, port);
+        }
 
         Node previousNode = findByHashKey(hashString);
 
@@ -115,8 +117,38 @@ public class RingList {
      * @return the removed node
      */
     public synchronized Node remove(String IP, String port) {
-        String hashString = getMD5Hash(IP, port);
-        return remove(hashString);
+        if (size == 0) {
+            return null;
+        }
+        else if (size == 1) {
+            Node node = head;
+            head = null;
+            size--;
+            return node;
+        }
+
+        Node toBeRemovedNode = findByIPandPort(IP, port);
+
+        if (size == 2) {
+            Node prev = toBeRemovedNode.getPrev();
+            prev.setNext(prev);
+            prev.setPrev(prev);
+            prev.setEndRange(toBeRemovedNode.getEndRange());
+            if (toBeRemovedNode == head) {
+                head = prev;
+            }
+        }
+        else {
+            toBeRemovedNode.getPrev().setNext(toBeRemovedNode.getNext());
+            toBeRemovedNode.getPrev().setEndRange(toBeRemovedNode.getEndRange());
+            toBeRemovedNode.getNext().setPrev(toBeRemovedNode.getPrev());
+
+            if (toBeRemovedNode == head) {
+                head = toBeRemovedNode.getPrev();
+            }
+        }
+        size--;
+        return toBeRemovedNode;
     }
 
     /**
@@ -187,7 +219,6 @@ public class RingList {
         Node replica1 = currentNode.next;
         Node replica2 = replica1.next;
         return should_node == currentNode || should_node == replica1 || should_node == replica2;
-
     }
 
     /**
@@ -264,7 +295,7 @@ public class RingList {
             String valueString = splitted[i];
             String[] values = valueString.split(",");
             String[] server = values[2].split(":");
-            add(server[0], server[1]);
+            add(server[0], server[1], values[1]);
         }
     }
 

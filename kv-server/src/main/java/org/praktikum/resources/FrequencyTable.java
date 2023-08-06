@@ -2,10 +2,9 @@ package org.praktikum.resources;
 
 import java.lang.reflect.Array;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.TreeMap;
+import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 public class FrequencyTable {
     private int numberOfBuckets;
@@ -14,6 +13,7 @@ public class FrequencyTable {
     private static final BigInteger MAX_VALUE = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     private static final BigInteger ZERO = new BigInteger("0", 16);
     private static final int NUMBER_OF_KEYRANGE_CHARS_TO_INCLUDE_IN_PRINT = 3;
+    private final ConsistentHashing hashing;
 
     //each array list represents the bucket for the keyRange saved in the String
     private ArrayList<Bucket> buckets;
@@ -23,12 +23,33 @@ public class FrequencyTable {
         if(offloadThreshold > 50 || offloadThreshold < 0){
             throw new NumberFormatException();
         }
+        try {
+            hashing = new ConsistentHashing();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
     public ArrayList<Bucket> getBuckets() {
         return buckets;
     }
     public int getNumberOfBuckets() {
         return numberOfBuckets;
+    }
+    public void updateBuckets(String startKeyRange, String endKeyRange) {
+        if (buckets == null || buckets.size() == 0) {
+            createBuckets(startKeyRange, endKeyRange);
+        } else {
+            if (! startKeyRange.equals(buckets.get(0).getStartRange()) || ! endKeyRange.equals(buckets.get(buckets.size() - 1).getEndRange())) {
+                List<String> allKeys = new LinkedList<>();
+                for (Bucket bucket : buckets) {
+                    allKeys.addAll(bucket.getBucketList());
+                }
+                createBuckets(startKeyRange, endKeyRange);
+                for (String key : allKeys) {
+                    addToTable(key, hashing.getMD5Hash(key));
+                }
+            }
+        }
     }
     public void createBuckets(String startKeyRange, String endKeyRange){
         BigInteger startRange = new BigInteger(startKeyRange, 16);
@@ -39,6 +60,9 @@ public class FrequencyTable {
         if (startRange.compareTo(endRange) > 0) {
             totalRange = MAX_VALUE.subtract(startRange).add(BigInteger.ONE).add(endRange);
         }
+        else if (startRange.equals(endRange)) {
+            totalRange = MAX_VALUE.add(BigInteger.ONE);
+        }
         else {
             totalRange = endRange.subtract(startRange);
         }
@@ -47,6 +71,7 @@ public class FrequencyTable {
         if (totalRange.compareTo(BigInteger.valueOf(numberOfBuckets)) < 0){
             numberOfBuckets = totalRange.intValue();
         }
+
 
         BigInteger bucketSize = totalRange.divide(BigInteger.valueOf(numberOfBuckets));
         // Calculate the remainder so that it can be split among the first buckets, if we can't split the keyrange into buckets of identical size.

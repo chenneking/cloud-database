@@ -125,7 +125,7 @@ public class ECSServer {
      */
 
     public ECSCommunication findPrevPartnerConnection(String address, String port) {
-        RingList.Node node = ringList.find(ringList.getMD5Hash(address, port));
+        RingList.Node node = ringList.find(address, port);
         RingList.Node successor = node.getPrev();
         System.out.println("DETERMINED SUCCESSOR OF " + address + ":" + port + " TO BE: " + successor.getIP() + ":" + successor.getPort());
         return ecsCommunicationHashMap.get(successor.getIP().concat(successor.getPort()));
@@ -140,7 +140,7 @@ public class ECSServer {
      * @return The ECSCommunication object that corresponds to the succeding partner of the provided server.
      */
     public ECSCommunication findNextPartnerConnection(String address, String port) {
-        RingList.Node node = ringList.find(ringList.getMD5Hash(address, port));
+        RingList.Node node = ringList.find(address, port);
         RingList.Node successor = node.getNext();
         System.out.println("DETERMINED SUCCESSOR OF " + address + ":" + port + " TO BE: " + successor.getIP() + ":" + successor.getPort());
         return ecsCommunicationHashMap.get(successor.getIP().concat(successor.getPort()));

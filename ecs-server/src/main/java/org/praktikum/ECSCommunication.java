@@ -153,7 +153,7 @@ public class ECSCommunication implements Runnable {
      */
     public synchronized void getDataFromKeyRange(String ip, String port, String keyRange) {
         messageHandler.send("request_data_key_range " + ip + " " + port + " " + keyRange);
-        sent(this.ip, this.port, "request_data_key_range Port: " + this.port + " Ip:" + this.ip + " KeyRange: " + keyRange);
+        sent(this.ip, this.port, "request_data_key_range Port: " + port + " Ip:" + ip + " KeyRange: " + keyRange);
     }
 
     /**

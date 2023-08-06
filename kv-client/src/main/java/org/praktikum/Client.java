@@ -207,6 +207,24 @@ public class Client implements SignalHandler {
                 }
                 EXECUTE = false;
             }
+            case "get_frequency_table" ->{
+                if (! isConnected) {
+                    print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
+                    break;
+                }
+                sendString("get_frequency_table");
+                handleServerResponse(tokens);
+
+            }
+            case "get_usage_metrics" ->{
+                if (! isConnected) {
+                    print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
+                    break;
+                }
+                sendString("get_usage_metrics");
+                handleServerResponse(tokens);
+
+            }
             default -> {
                 print("Unknown command! Please refer to help to find information on the proper command usage:");
                 printHelpText();

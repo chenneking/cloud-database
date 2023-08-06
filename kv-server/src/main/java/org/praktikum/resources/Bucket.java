@@ -8,6 +8,10 @@ public class Bucket {
     String endRange;
     String size;
 
+    public ArrayList<String> getBucketList() {
+        return bucketList;
+    }
+
     private ArrayList<String> bucketList = new ArrayList<>();
 
     public Bucket(String startRange, String endRange){
@@ -17,6 +21,7 @@ public class Bucket {
 
     public boolean insert(String key, String hash){
         if(isRightBucket(hash)){
+            // Case Update: don't store keys twice, when value is updated.
             bucketList.remove(key);
             return bucketList.add(key);
         }
