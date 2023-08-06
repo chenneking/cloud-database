@@ -96,7 +96,14 @@ public class FrequencyTable {
         }
     }
     public void addDummyBucket(String data){
+        String[] split = data.trim().split(";");
 
+        String dummyStartAndEnd = buckets.get(0).getStartRange();
+        Bucket dummyBucket = new Bucket(dummyStartAndEnd, dummyStartAndEnd);
+        for (String str : split) {
+            String[] key_val_arr = str.split(",");
+            dummyBucket.getBucketList().add(key_val_arr[0]);
+        }
     }
     public void addToTable(String key, String hash) {
         totalBucketSize += 1;
@@ -117,29 +124,38 @@ public class FrequencyTable {
         int bucketIndex = 0;
         if(lower){
             startRange = buckets.get(0).getStartRange();
+            int cumulativeBucketSize = 0;
             for (Bucket bucket : buckets) {
-                if ((bucket.size() / totalBucketSize) * 100 >= offloadThreshold) {
+                cumulativeBucketSize += bucket.size();
+                double percentage = cumulativeBucketSize == 0 ? 0 : BigInteger.valueOf(cumulativeBucketSize).doubleValue() / BigInteger.valueOf(totalBucketSize).doubleValue() * 100;
+                if (percentage >= offloadThreshold) {
                     break;
                 }
                 if(bucketIndex < buckets.size()-1){
                     bucketIndex++;
                 }
-
             }
             endRange = buckets.get(bucketIndex).getEndRange();
+            if (bucketIndex >= 0) {
+                buckets.subList(0, bucketIndex + 1).clear();
+            }
         }
         else{
             startRange = buckets.get(buckets.size() -1).getEndRange();
+            int cumulativeBucketSize = 0;
             for(int j = buckets.size()-1; j >= 0; j--){
-                if((buckets.get(j).size()/totalBucketSize) * 100 >= offloadThreshold){
+                cumulativeBucketSize += buckets.get(j).size();
+                if((cumulativeBucketSize/totalBucketSize) * 100 >= offloadThreshold){
                     break;
                 }
                 if(bucketIndex < buckets.size()-1){
                     bucketIndex++;
                 }
-
             }
             endRange = buckets.get(bucketIndex).getStartRange();
+            if (bucketIndex >= 0) {
+                buckets.subList(bucketIndex, buckets.size()).clear();
+            }
         }
         return new String[]{startRange, endRange};
     }

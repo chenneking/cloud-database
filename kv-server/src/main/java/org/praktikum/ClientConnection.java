@@ -22,7 +22,7 @@ public class ClientConnection implements Runnable {
     private final ConsistentHashing hashing;
     private final KVServer kvServer;
     private final Socket clientSocket;
-    private final static int OPERATION_COUNT_OFFLOAD_THRESHOLD = 3000;
+    private final static int OPERATION_COUNT_OFFLOAD_THRESHOLD = 4;
 
     public ClientConnection(Socket clientSocket, ConsistentHashing hashing, KVServer kvServer) {
         this.storageUnit = kvServer.getStore();
@@ -291,7 +291,7 @@ public class ClientConnection implements Runnable {
             messageHandler.send("put_update " + key);
 
             kvServer.getUsageMetrics().addOperation();
-            kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
+            //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
 
         } else {
             KVServer.log.info("Error during PUT: " + key + ":" + value);
@@ -331,10 +331,10 @@ public class ClientConnection implements Runnable {
         messageHandlerNext.send("get_usage_metrics_info");
         //skips over the welcome message
         messageHandlerNext.receive();
-        int nextLoad = Integer.parseInt(new String(messageHandlerNext.receive(), StandardCharsets.UTF_8));
+        int nextLoad = Integer.parseInt(new String(messageHandlerNext.receive(), StandardCharsets.UTF_8).replace("\r\n", ""));
         messageHandlerPrev.send("get_usage_metrics_info");
         messageHandlerPrev.receive();
-        int prevLoad = Integer.parseInt(new String(messageHandlerPrev.receive(), StandardCharsets.UTF_8));
+        int prevLoad = Integer.parseInt(new String(messageHandlerPrev.receive(), StandardCharsets.UTF_8).replace("\r\n", ""));
         System.out.println("-----next load: " + nextLoad);
         System.out.println("-----prev Load: " + prevLoad);
         System.out.println("-----current Server load: " + kvServer.getUsageMetrics().toString());
@@ -366,6 +366,7 @@ public class ClientConnection implements Runnable {
         messageHandlerPrev.close();
         socketNext.close();
         socketPrev.close();
+        kvServer.getUsageMetrics().resetCount();
     }
     private synchronized void changeKeyRangeRequest(String startRange, String endRang){
         kvServer.getEcsConnection().send("update_keyrange "+ startRange + " " + endRang);
@@ -403,7 +404,7 @@ public class ClientConnection implements Runnable {
         }
         else {
             kvServer.getUsageMetrics().addOperation();
-            kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
+            //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
             KVServer.log.info("Successful GET: " + key + ":" + value);
             messageHandler.send("get_success " + key + " " + value);
         }

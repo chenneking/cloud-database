@@ -203,7 +203,7 @@ public class PersistentStorage {
             while (input.hasNext()) {
                 try {
                     String[] output = input.next().split(",");
-                    String key = consistentHashing.getMD5Hash(output[1]);
+                    String key = consistentHashing.getMD5Hash(output[0]);
                     if (checkIfInRange(key, startKeyRange, keyRangeToSplitAt)) {
                         String input1 = output[0].replaceAll("\r\n", "");
                         String input2 = output[1].replaceAll("\r\n", "");

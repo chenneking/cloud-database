@@ -6,6 +6,7 @@ public class UsageMetrics{
 
     private int totalOperations;
     private int operationsLast30s;
+    private final static long TIME_FRAME = 6_969_696_969L;
 
     //keys in storage are the keys in the persistent storage
     public UsageMetrics(){
@@ -21,7 +22,7 @@ public class UsageMetrics{
         Thread resetThread = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(30000);
+                    Thread.sleep(TIME_FRAME);
                     operationsLast30s = 0;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -45,6 +46,10 @@ public class UsageMetrics{
 
     public int getOperationsLast30s() {
         return operationsLast30s;
+    }
+
+    public void resetCount() {
+        operationsLast30s = 0;
     }
 
 }
