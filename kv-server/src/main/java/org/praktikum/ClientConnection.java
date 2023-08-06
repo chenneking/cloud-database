@@ -161,8 +161,10 @@ public class ClientConnection implements Runnable {
                 messageHandler.send(kvServer.getFrequencyTable().toString());
             }
             case "get_usage_metrics" -> {
-                messageHandler.send(usageMetrics.toString());
+                messageHandler.send(usageMetrics.info());
             }
+            case "set_write_lock" -> kvServer.setWriteLock(true);
+            case "remove_write_lock" -> kvServer.setWriteLock(false);
             default -> {
                 error();
                 KVServer.log.info("Received unknown command: " + clientRequest);
@@ -245,7 +247,7 @@ public class ClientConnection implements Runnable {
 
         String hash = hashing.getMD5Hash(key);
         boolean isRightServer = checkIfRightServer(hash);
-        if (! isRightServer) {
+        if (!isRightServer) {
             messageHandler.send("server_not_responsible");
             return;
         }
@@ -257,14 +259,12 @@ public class ClientConnection implements Runnable {
             messageHandler.send("put_success " + key);
             usageMetrics.addOperation();
             //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
-        }
-        else if (status == PutResult.UPDATE) {
+        } else if (status == PutResult.UPDATE) {
             KVServer.log.info("Successful UPDATE: " + key + ":" + value);
             messageHandler.send("put_update " + key);
             usageMetrics.addOperation();
             //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
-        }
-        else {
+        } else {
             KVServer.log.info("Error during PUT: " + key + ":" + value);
             messageHandler.send("put_error");
         }
@@ -306,24 +306,42 @@ public class ClientConnection implements Runnable {
         messageHandlerPrev.send("get_usage_metrics");
         messageHandlerPrev.receive();
         int prevLoad = Integer.parseInt(new String(messageHandlerPrev.receive(), StandardCharsets.UTF_8));
-        /*System.out.println("-----next load: " + nextLoad);
+        System.out.println("-----next load: " + nextLoad);
         System.out.println("-----prev Load: " + prevLoad);
         System.out.println("-----current Server load: " + usageMetrics.toString());
+
+        String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(true);
+        String data = kvServer.getStore().getDataBetweenKeyRanges(keyRange[0], keyRange[1]);
+        //if the load of the current Server is smaller than the load of the other 2 servers you do nothing
+        if(usageMetrics.getOperationsLast30s() < nextLoad && usageMetrics.getOperationsLast30s() < prevLoad){
+            return;
+        }
+        //if the load of the next server is smaller than the load of prev you offload your keys to the next server
+        if(nextLoad < prevLoad){
+            messageHandlerNext.send("set_write_lock");
+            kvServer.setWriteLock(true);
+            messageHandlerNext.send("save_data" + data);
+            changeKeyRangeRequest(keyRange[0], keyRange[1]);
+            messageHandlerNext.send("release_write_lock");
+            kvServer.setWriteLock(false);
+
+        }
+        else{
+            messageHandlerPrev.send("set_write_lock");
+            kvServer.setWriteLock(true);
+            messageHandlerPrev.send("save_data" + data);
+            changeKeyRangeRequest(keyRange[0], keyRange[1]);
+            messageHandlerPrev.send("release_write_lock");
+            kvServer.setWriteLock(false);
+        }
+
         messageHandlerNext.close();
         messageHandlerPrev.close();
         socketNext.close();
         socketPrev.close();
-        */
-        //@TODO: 05.08.2023 add variable instead of fixed value
-        String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(true);
-        offloadKeys(keyRange[0],keyRange[1]);
-        changeKeyRange(keyRange[0],keyRange[1]);
     }
-    private synchronized void offloadKeys(String startRange, String endRange){
-
-    }
-    private synchronized void changeKeyRange(String startRange, String endRang){
-
+    private synchronized void changeKeyRangeRequest(String startRange, String endRang){
+        kvServer.getEcsConnection().send("update_keyrange "+ startRange + " " + endRang);
     }
 
     /**

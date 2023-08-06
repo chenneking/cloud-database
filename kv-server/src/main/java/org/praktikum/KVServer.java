@@ -211,6 +211,9 @@ public class KVServer {
         return toBeRemovedKeys;
     }
 
+    public ECSConnection getEcsConnection(){
+        return ecsConnection;
+    }
     /**
      * Creates a replica store, associates it with a given replica node, and requests data for it.
      * This process happens only if the replica isn't already stored.
