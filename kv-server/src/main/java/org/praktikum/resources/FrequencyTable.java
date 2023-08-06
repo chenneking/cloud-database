@@ -9,6 +9,11 @@ import java.util.*;
 public class FrequencyTable {
     private int numberOfBuckets;
     private final int offloadThreshold;
+
+    public void setTotalBucketSize(int totalBucketSize) {
+        this.totalBucketSize = totalBucketSize;
+    }
+
     private int totalBucketSize = 0;
     private static final BigInteger MAX_VALUE = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     private static final BigInteger ZERO = new BigInteger("0", 16);
@@ -123,8 +128,9 @@ public class FrequencyTable {
     public String [] calculateOffloadKeyRange(boolean lower) {
         String startRange;
         String endRange;
-        int bucketIndex = 0;
+
         if(lower){
+            int bucketIndex = 0;
             startRange = buckets.get(0).getStartRange();
             int cumulativeBucketSize = 0;
             for (Bucket bucket : buckets) {
@@ -141,25 +147,29 @@ public class FrequencyTable {
             if (bucketIndex >= 0) {
                 buckets.subList(0, bucketIndex + 1).clear();
             }
+            return new String[]{startRange, endRange};
         }
         else{
-            startRange = buckets.get(buckets.size() -1).getEndRange();
+            int bucketIndex = buckets.size() - 1;
+            startRange = buckets.get(buckets.size()-1).getEndRange();
             int cumulativeBucketSize = 0;
             for(int j = buckets.size()-1; j >= 0; j--){
                 cumulativeBucketSize += buckets.get(j).size();
-                if((cumulativeBucketSize/totalBucketSize) * 100 >= offloadThreshold){
+                double percentage = cumulativeBucketSize == 0 ? 0 : BigInteger.valueOf(cumulativeBucketSize).doubleValue() / BigInteger.valueOf(totalBucketSize).doubleValue() * 100;
+                if(percentage >= offloadThreshold){
                     break;
                 }
-                if(bucketIndex < buckets.size()-1){
-                    bucketIndex++;
+                if(bucketIndex > 0){
+                    bucketIndex --;
                 }
             }
             endRange = buckets.get(bucketIndex).getStartRange();
             if (bucketIndex >= 0) {
                 buckets.subList(bucketIndex, buckets.size()).clear();
             }
+            return new String[]{endRange, startRange};
         }
-        return new String[]{startRange, endRange};
+
     }
     public void removeBucket(int countToRemove, boolean lower){
         if(lower){

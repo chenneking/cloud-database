@@ -82,5 +82,33 @@ public class Testing {
         frequencyTable.createBuckets("000B97B0B6E75689CF143CC626655902","600007FFA927B1B1E2CB7E9A7DA8A273");
         System.out.println(frequencyTable.getAllInfo());
     }
+
+    @Test
+    public void testRangeCalculationLeft() {
+        FrequencyTable frequencyTable = new FrequencyTable(3,20);
+        frequencyTable.createBuckets("10000000000000000000000000000000","40000000000000000000000000000000");
+        List<Bucket> bucketList = frequencyTable.getBuckets();
+        bucketList.get(0).getBucketList().add("bucket 1");
+        bucketList.get(1).getBucketList().add("bucket 2");
+        bucketList.get(2).getBucketList().add("bucket 3");
+        frequencyTable.setTotalBucketSize(3);
+        String[] calculatedRanges = frequencyTable.calculateOffloadKeyRange(true);
+        assertEquals("10000000000000000000000000000000", calculatedRanges[0]);
+        assertEquals("20000000000000000000000000000000", calculatedRanges[1]);
+    }
+
+    @Test
+    public void testRangeCalculationRight() {
+        FrequencyTable frequencyTable = new FrequencyTable(3,20);
+        frequencyTable.createBuckets("10000000000000000000000000000000","40000000000000000000000000000000");
+        List<Bucket> bucketList = frequencyTable.getBuckets();
+        frequencyTable.setTotalBucketSize(3);
+        bucketList.get(0).getBucketList().add("bucket 1");
+        bucketList.get(1).getBucketList().add("bucket 2");
+        bucketList.get(2).getBucketList().add("bucket 3");
+        String[] calculatedRanges = frequencyTable.calculateOffloadKeyRange(false);
+        assertEquals("30000000000000000000000000000000", calculatedRanges[0]);
+        assertEquals("40000000000000000000000000000000", calculatedRanges[1]);
+    }
 }
 

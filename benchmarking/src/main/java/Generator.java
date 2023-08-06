@@ -179,8 +179,12 @@ public class Generator {
 
     public static void main(String[] args) {
         Generator generator = new Generator();
-        generator.generate3Buckets();
-        generator.generate6Buckets();
-        generator.generate9Buckets();
+        String folder = "/Users/carl/IdeaProjects/ms5/benchmarking/big_and_random";
+        generator.generateHashInRange(
+                "000B97B0B6E75689CF143CC626655902",
+                "600007FFA927B1B1E2CB7E9A7DA8A273",
+                20000,
+                folder + "/20k.csv"
+        );
     }
 }

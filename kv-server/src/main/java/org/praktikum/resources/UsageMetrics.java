@@ -6,7 +6,7 @@ public class UsageMetrics{
 
     private int totalOperations;
     private int operationsLast30s;
-    private final static long TIME_FRAME = 6_969_696_969L;
+    private final static long TIME_FRAME = 300000L;
 
     //keys in storage are the keys in the persistent storage
     public UsageMetrics(){
