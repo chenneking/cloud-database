@@ -4,6 +4,7 @@ import org.praktikum.communication.MessageHandler;
 import org.praktikum.resources.ConsistentHashing;
 import org.praktikum.resources.FrequencyTable;
 import org.praktikum.resources.RingList;
+import org.praktikum.resources.UsageMetrics;
 import org.praktikum.storage.*;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -38,6 +39,8 @@ public class KVServer {
     private final Random random;
     private String customEndRangeHash;
     private final FrequencyTable frequencyTable;
+    private final UsageMetrics usageMetrics;
+
     public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy, int numberOfBuckets, int offloadThreshold, String customEndRangeHash) {
         this.port = port;
         this.isRunning = false;
@@ -59,6 +62,8 @@ public class KVServer {
             this.random = new Random(port);
             this.frequencyTable = new FrequencyTable(numberOfBuckets, offloadThreshold);
             this.customEndRangeHash = customEndRangeHash;
+            this.usageMetrics = new UsageMetrics();
+
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -373,13 +378,15 @@ public class KVServer {
         }
         log.info("Stopped server");
     }
-
+    public UsageMetrics getUsageMetrics(){
+        return usageMetrics;
+    }
     public FrequencyTable getFrequencyTable() {
         return frequencyTable;
     }
 
     public static void main(String[] args) {
-        //KVServer kv = new KVServer(45263,"127.0.0.1","0.0.0.0:44331","123","123",Level.ALL,0,"FIFO", 5 ,30);
+        //KVServer kv = new KVServer(8001,"127.0.0.1","0.0.0.0:44331","123","123",Level.ALL,0,"FIFO", 5 ,30,null);
         //kv.runServer();
     }
 }

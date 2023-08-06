@@ -4,18 +4,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class UsageMetrics{
 
-    private static int totalOperations;
-    private static int operationsLast30s;
+    private int totalOperations;
+    private int operationsLast30s;
 
     //keys in storage are the keys in the persistent storage
-    public UsageMetrics(int keysInStorage){
-        totalOperations = keysInStorage;
+    public UsageMetrics(){
+        totalOperations = 0;
         operationsLast30s = 0;
         startResetThread();
     }
     public void addOperation(){
-        totalOperations += 1;
-        operationsLast30s += 1;
+        totalOperations = totalOperations + 1;
+        operationsLast30s = operationsLast30s + 1;
     }
     private void startResetThread(){
         Thread resetThread = new Thread(() -> {
