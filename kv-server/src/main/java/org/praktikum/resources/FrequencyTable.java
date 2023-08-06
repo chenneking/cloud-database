@@ -39,7 +39,7 @@ public class FrequencyTable {
         if (buckets == null || buckets.size() == 0) {
             createBuckets(startKeyRange, endKeyRange);
         } else {
-            if (! startKeyRange.equals(buckets.get(0).getStartRange()) || ! endKeyRange.equals(buckets.get(buckets.size() - 1).getEndRange())) {
+            if (! startKeyRange.equals(buckets.get(0).getStartRange()) || ! endKeyRange.equals(buckets.get(buckets.size() - 1).getEndRange()) || buckets.size() < numberOfBuckets) {
                 List<String> allKeys = new LinkedList<>();
                 for (Bucket bucket : buckets) {
                     allKeys.addAll(bucket.getBucketList());
@@ -78,6 +78,7 @@ public class FrequencyTable {
         BigInteger remainder = totalRange.mod(BigInteger.valueOf(numberOfBuckets));
 
         buckets = new ArrayList<>(numberOfBuckets);
+        totalBucketSize = 0;
 
         for (int i = 0; i < numberOfBuckets; i++) {
             BigInteger bucketEndRange = startRange.add(bucketSize);
@@ -104,6 +105,7 @@ public class FrequencyTable {
             String[] key_val_arr = str.split(",");
             dummyBucket.getBucketList().add(key_val_arr[0]);
         }
+        buckets.add(dummyBucket);
     }
     public void addToTable(String key, String hash) {
         totalBucketSize += 1;
@@ -171,7 +173,6 @@ public class FrequencyTable {
             }
         }
     }
-    // TODO: this method should return ascii string of pretty-printed frequency table that can be sent to kv-client
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

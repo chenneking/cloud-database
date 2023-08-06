@@ -125,7 +125,7 @@ public class ClientConnection implements Runnable {
             case "save_data_buckets" -> {
                 String[] dataToSend = Arrays.copyOfRange(tokens, 1, tokens.length);
                 String data = String.join(" ", dataToSend);
-                System.out.println("Received: save_data " + data);
+                System.out.println("Received: save_data_buckets " + data);
                 storageUnit.saveData(data, true);
                 kvServer.getFrequencyTable().addDummyBucket(data);
             }
@@ -339,28 +339,31 @@ public class ClientConnection implements Runnable {
         System.out.println("-----prev Load: " + prevLoad);
         System.out.println("-----current Server load: " + kvServer.getUsageMetrics().toString());
 
-        String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(true);
-        String data = kvServer.getStore().getDataBetweenKeyRanges(keyRange[0], keyRange[1]);
+
         //if the load of the current Server is smaller than the load of the other 2 servers you do nothing
         if(kvServer.getUsageMetrics().getOperationsLast30s() < nextLoad && kvServer.getUsageMetrics().getOperationsLast30s() < prevLoad){
             return;
         }
         //if the load of the next server is smaller than the load of prev you offload your keys to the next server
         if(nextLoad < prevLoad){
+            String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(false);
+            String data = kvServer.getStore().getDataBetweenKeyRanges(keyRange[0], keyRange[1]);
             messageHandlerNext.send("set_write_lock");
             kvServer.setWriteLock(true);
-            messageHandlerNext.send("save_data_buckets" + data);
-            messageHandlerNext.send("release_write_lock");
+            messageHandlerNext.send("save_data_buckets " + data);
+            messageHandlerNext.send("remove_write_lock");
             kvServer.setWriteLock(false);
-            changeKeyRangeRequest(keyRange[0], keyRange[1]);
+            changeKeyRangeRequest(kvServer.getStartRange(), keyRange[0]);
         }
         else{
+            String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(true);
+            String data = kvServer.getStore().getDataBetweenKeyRanges(keyRange[0], keyRange[1]);
             messageHandlerPrev.send("set_write_lock");
             kvServer.setWriteLock(true);
-            messageHandlerPrev.send("save_data_buckets" + data);
-            messageHandlerPrev.send("release_write_lock");
+            messageHandlerPrev.send("save_data_buckets " + data);
+            messageHandlerPrev.send("remove_write_lock");
             kvServer.setWriteLock(false);
-            changeKeyRangeRequest(keyRange[0], keyRange[1]);
+            changeKeyRangeRequest(keyRange[1], kvServer.getEndRange());
         }
         messageHandlerNext.close();
         messageHandlerPrev.close();
