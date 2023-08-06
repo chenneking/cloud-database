@@ -95,7 +95,9 @@ public class FrequencyTable {
             }
         }
     }
+    public void addDummyBucket(String data){
 
+    }
     public void addToTable(String key, String hash) {
         totalBucketSize += 1;
         for (Bucket bucket : buckets) {

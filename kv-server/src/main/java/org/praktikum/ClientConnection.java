@@ -122,6 +122,13 @@ public class ClientConnection implements Runnable {
                 storageUnit.saveData(data, true);
                 close();
             }
+            case "save_data_buckets" -> {
+                String[] dataToSend = Arrays.copyOfRange(tokens, 1, tokens.length);
+                String data = String.join(" ", dataToSend);
+                System.out.println("Received: save_data " + data);
+                storageUnit.saveData(data, true);
+                kvServer.getFrequencyTable().addDummyBucket(data);
+            }
             case "ECS" -> {
                 if (tokens[1].equals("ping_request"))
                     messageHandler.send("server_is_running");
@@ -342,18 +349,18 @@ public class ClientConnection implements Runnable {
         if(nextLoad < prevLoad){
             messageHandlerNext.send("set_write_lock");
             kvServer.setWriteLock(true);
-            messageHandlerNext.send("save_data" + data);
-            changeKeyRangeRequest(keyRange[0], keyRange[1]);
+            messageHandlerNext.send("save_data_buckets" + data);
             messageHandlerNext.send("release_write_lock");
             kvServer.setWriteLock(false);
+            changeKeyRangeRequest(keyRange[0], keyRange[1]);
         }
         else{
             messageHandlerPrev.send("set_write_lock");
             kvServer.setWriteLock(true);
-            messageHandlerPrev.send("save_data" + data);
-            changeKeyRangeRequest(keyRange[0], keyRange[1]);
+            messageHandlerPrev.send("save_data_buckets" + data);
             messageHandlerPrev.send("release_write_lock");
             kvServer.setWriteLock(false);
+            changeKeyRangeRequest(keyRange[0], keyRange[1]);
         }
         messageHandlerNext.close();
         messageHandlerPrev.close();
