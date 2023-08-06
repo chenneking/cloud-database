@@ -148,6 +148,17 @@ public class RingList {
         return null;
     }
 
+    public synchronized void updateKeyRanges(String ip, String port, String startRange, String endRange) {
+        Node node = find(getMD5Hash(ip, port));
+        // Update startRange
+        node.setStartRange(startRange);
+        node.getPrev().setEndRange(startRange);
+
+        //Update endRange
+        node.setEndRange(endRange);
+        node.getNext().setStartRange(endRange);
+    }
+
     /**
      * Converts the ring list to a string representation.
      *

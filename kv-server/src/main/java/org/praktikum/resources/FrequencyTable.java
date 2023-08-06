@@ -11,9 +11,9 @@ public class FrequencyTable {
     private int numberOfBuckets;
     private final int offloadThreshold;
     private int totalBucketSize = 0;
-    private static final BigInteger MAX_VALUE = new BigInteger("FFFFFFFFFFFFFFFF", 16);
+    private static final BigInteger MAX_VALUE = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     private static final BigInteger ZERO = new BigInteger("0", 16);
-    private static final int NUMBER_OF_KEYRANGE_CHARS_TO_INCLUDE_IN_PRINT = 2;
+    private static final int NUMBER_OF_KEYRANGE_CHARS_TO_INCLUDE_IN_PRINT = 3;
 
     //each array list represents the bucket for the keyRange saved in the String
     private ArrayList<Bucket> buckets;
@@ -63,7 +63,7 @@ public class FrequencyTable {
             if (bucketEndRange.compareTo(MAX_VALUE) > 0) {
                 bucketEndRange = bucketEndRange.subtract(MAX_VALUE).subtract(BigInteger.ONE);
             }
-            buckets.add(new Bucket(String.format("%016X", startRange), String.format("%016X", bucketEndRange)));
+            buckets.add(new Bucket(String.format("%032X", startRange), String.format("%032X", bucketEndRange)));
             startRange = bucketEndRange;
             if (startRange.compareTo(MAX_VALUE) > 0) {
                 startRange = startRange.subtract(MAX_VALUE);
@@ -137,8 +137,7 @@ public class FrequencyTable {
             return "No Buckets present.";
         }
 
-        for (int i = 0; i < buckets.size(); i++) {
-            Bucket bucket = buckets.get(i);
+        for (Bucket bucket : buckets) {
             int bucketSize = bucket.size();
 
             double percentage = bucketSize == 0 ? 0 : BigInteger.valueOf(bucketSize).doubleValue() / BigInteger.valueOf(totalBucketSize).doubleValue() * 100;
@@ -158,6 +157,20 @@ public class FrequencyTable {
             builder.append("\n");
         }
         builder.append("Where each # represents 1% of the keys within the server");
+        return builder.toString();
+    }
+
+    public String getAllInfo() {
+        StringBuilder builder = new StringBuilder();
+
+        for (Bucket bucket : buckets) {
+            builder.append(bucket.getStartRange());
+            builder.append("\n");
+            builder.append(bucket.getEndRange());
+            builder.append("\n");
+            builder.append("----");
+            builder.append("\n");
+        }
         return builder.toString();
     }
 }

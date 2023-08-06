@@ -92,6 +92,10 @@ public class ECSServer {
         return ecsCommunicationHashMap.remove(successor.getIP().concat(node.getPort()));
     }
 
+    public void updateKeyRanges(String ip, String port, String startRange, String endRange) {
+        ringList.updateKeyRanges(ip, port, startRange, endRange);
+    }
+
     /**
      * gets all meta data and converts them to a string
      *

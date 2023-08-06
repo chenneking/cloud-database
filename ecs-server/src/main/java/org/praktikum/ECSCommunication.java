@@ -113,6 +113,13 @@ public class ECSCommunication implements Runnable {
                 closeConnection();
                 ecsServer.sendMetaDataToAll();
             }
+            // CMD: update_keyrange start_range end_range
+            case "update_keyrange" -> {
+                String newStartRange = tokens[1];
+                String newEndRange = tokens[2];
+                ecsServer.updateKeyRanges(ip,port, newStartRange, newEndRange);
+                ecsServer.sendMetaDataToAll();
+            }
         }
     }
 

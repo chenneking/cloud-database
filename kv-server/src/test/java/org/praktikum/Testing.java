@@ -112,9 +112,9 @@ public class Testing {
 
     @Test
     public void danaiSpielHierRum() {
-        FrequencyTable frequencyTable = new FrequencyTable(5, 50);
-        frequencyTable.createBuckets("0000000000000000","4000000000000000");
-        System.out.println(frequencyTable);
+        FrequencyTable frequencyTable = new FrequencyTable(9, 50);
+        frequencyTable.createBuckets("000B97B0B6E75689CF143CC626655902","600007FFA927B1B1E2CB7E9A7DA8A273");
+        System.out.println(frequencyTable.getAllInfo());
     }
 }
 
