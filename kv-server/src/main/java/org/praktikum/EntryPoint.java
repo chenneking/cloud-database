@@ -1,6 +1,7 @@
 package org.praktikum;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Level;
 
 public class EntryPoint {
@@ -15,11 +16,10 @@ public class EntryPoint {
             case "-ll" -> flags[5] = value;
             case "-c" -> flags[6] = value;
             case "-s" -> flags[7] = value;
+            case "-bc" -> flags[8] = value;
+            case "-t" -> flags[9] = value;
+            case "-e" -> flags[10] = value;
             case "-h" -> printHelpText();
-
-            //TODO: hier flag einfügen für die Anzahl an Buckets (zumindest initially)
-            //TODO: hier flag einfügen für die Offload threshold
-
             default -> printInvalidInput(flags);
         }
     }
@@ -75,8 +75,27 @@ public class EntryPoint {
                 "-s <strategy>",
                 "-s FIFO"
         );
-        //TODO: hier argument help einfügen für die neuen flags (number of buckets + threshold percentage)
-        // falls wir default werte setzen wollen, müssen wir die hier auch beschreiben (evtl. default werte based auf unserem optimum)
+        printArgumentHelp(
+                "-bc",
+                "Sets the number of buckets that the keyrange of a KVServer is split up into",
+                "-bc <count>",
+                "-bc 4",
+                "3"
+        );
+        printArgumentHelp(
+                "-t",
+                "Sets the offload threshold value for a keyrange transfer between KVServers in percent",
+                "-t <threshold>",
+                "-t 33",
+                "34"
+        );
+        printArgumentHelp(
+                "-e",
+                "Provide a 32 character long customized endRange of the KVServer. Has to be within The range of 00 - FF.",
+                "-e <endRange>",
+                "-e 60000000000000000000000000000000"
+        );
+        //TODO: HIER OPTIMA IN DEFAULT VALUES UPDATEN
     }
 
     private static void printArgumentHelp(String command, String description, String usage, String example, String... defaultValue) {
@@ -98,12 +117,16 @@ public class EntryPoint {
 
     public static void main(String[] args) {
         System.out.println("provided args: " + Arrays.toString(args));
-        String[] flags = new String[8];
+        String[] flags = new String[11];
         //Set default value for address
         flags[1] = "127.0.0.1";
         flags[4] = "logs/server.log";
 
-        //TODO: default werte hier setzen für die neuen flags, falls wir das so machen
+        //TODO: DEFAULT WERTE FÜR BUCKET COUNT UND THRESHOLD WERTE AUF OPTIMA SETZEN
+        flags[8] = "3";
+        flags[9] = "34";
+        //Default for -e flag: empty string.
+        flags[10] = "";
 
         //Parse CLI parameters
         for (int i = 0; i < args.length; i++) {
@@ -128,8 +151,9 @@ public class EntryPoint {
             int port = Integer.parseInt(flags[0]);
             int cacheSize = Integer.parseInt(flags[6]);
             Level logLevel = Level.parse(flags[5]);
-            //@ToDo replace with proper flags
-            KVServer KVServer = new KVServer(port, flags[1], flags[2], flags[3], flags[4], logLevel, cacheSize, flags[7], 0 ,0);
+            int numberOfBuckets = Integer.parseInt(flags[8]);
+            int offloadThreshold = Integer.parseInt(flags[9]);
+            KVServer KVServer = new KVServer(port, flags[1], flags[2], flags[3], flags[4], logLevel, cacheSize, flags[7], numberOfBuckets, offloadThreshold, flags[10]);
             KVServer.runServer();
         } catch (Exception e) {
             System.out.println("An error occurred while starting up the server");

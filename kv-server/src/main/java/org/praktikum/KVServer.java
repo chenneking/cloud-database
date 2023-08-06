@@ -36,9 +36,9 @@ public class KVServer {
     private final ConsistentHashing hashing;
     private final ArrayList<ClientConnection> clientConnections = new ArrayList<>();
     private final Random random;
-
+    private String customEndRangeHash;
     private final FrequencyTable frequencyTable;
-    public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy, int numberOfBuckets, int offloadThreshold) {
+    public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy, int numberOfBuckets, int offloadThreshold, String customEndRangeHash) {
         this.port = port;
         this.isRunning = false;
         this.address = address;
@@ -58,6 +58,7 @@ public class KVServer {
             this.ringList = new RingList();
             this.random = new Random(port);
             this.frequencyTable = new FrequencyTable(numberOfBuckets, offloadThreshold);
+            this.customEndRangeHash = customEndRangeHash;
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -293,7 +294,7 @@ public class KVServer {
             String ecsPort = bootstrapAddress.split(":")[1];
             Socket ecs = new Socket(ecsAddress, Integer.parseInt(ecsPort));
             ConsistentHashing hashing = new ConsistentHashing();
-            ECSConnection connection = new ECSConnection(ecs, store, hashing, this, address, port);
+            ECSConnection connection = new ECSConnection(ecs, store, hashing, this, address, port, customEndRangeHash);
             ecsConnection = connection;
             new Thread(connection).start();
         } catch (IOException e) {
@@ -374,7 +375,7 @@ public class KVServer {
     }
 
     public static void main(String[] args) {
-        KVServer kv = new KVServer(45263,"127.0.0.1","0.0.0.0:44331","123","123",Level.ALL,0,"FIFO", 5 ,30);
-        kv.runServer();
+        //KVServer kv = new KVServer(45263,"127.0.0.1","0.0.0.0:44331","123","123",Level.ALL,0,"FIFO", 5 ,30);
+        //kv.runServer();
     }
 }

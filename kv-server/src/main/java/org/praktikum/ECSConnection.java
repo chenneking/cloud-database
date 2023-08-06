@@ -21,8 +21,9 @@ public class ECSConnection implements Runnable, SignalHandler {
     private final String ip;
     private final String port;
     private final Socket socket;
+    private String customEndRangeHash;
 
-    public ECSConnection(Socket clientSocket, KVStore storageUnit, ConsistentHashing hashing, KVServer kvServer, String ip, int port) {
+    public ECSConnection(Socket clientSocket, KVStore storageUnit, ConsistentHashing hashing, KVServer kvServer, String ip, int port, String customEndRangeHash) {
         this.storageUnit = storageUnit;
         this.messageHandler = new MessageHandler(clientSocket);
         isOpen = true;
@@ -30,6 +31,7 @@ public class ECSConnection implements Runnable, SignalHandler {
         this.ip = ip;
         this.port = Integer.toString(port);
         this.socket = clientSocket;
+        this.customEndRangeHash = customEndRangeHash;
 
         Signal termSignal = new Signal("TERM");
         Signal.handle(termSignal, this);
@@ -41,7 +43,12 @@ public class ECSConnection implements Runnable, SignalHandler {
      */
     @Override
     public void run() {
-        messageHandler.send("kvServer " + port + " " + ip);
+        if (customEndRangeHash != null && ! customEndRangeHash.equals("")) {
+            messageHandler.send("kvServer " + port + " " + ip + " " + customEndRangeHash);
+        }
+        else {
+            messageHandler.send("kvServer " + port + " " + ip);
+        }
         try {
             while (isOpen) {
                 byte[] input = messageHandler.receive();

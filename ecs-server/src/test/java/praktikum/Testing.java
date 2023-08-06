@@ -19,19 +19,19 @@ public class Testing {
         try {
             RingList ringList = new RingList();
 
-            RingList.Node node1 = ringList.add("127.0.0.1", "8001");
+            RingList.Node node1 = ringList.add("127.0.0.1", "8001", null);
             System.out.println("Added: " + node1);
             System.out.println(ringList);
-            RingList.Node node2 = ringList.add("127.0.0.1", "8002");
+            RingList.Node node2 = ringList.add("127.0.0.1", "8002", null);
             System.out.println("Added: " + node2);
             System.out.println(ringList);
-            RingList.Node node3 = ringList.add("127.0.0.1", "8003");
+            RingList.Node node3 = ringList.add("127.0.0.1", "8003", null);
             System.out.println("Added: " + node3);
             System.out.println(ringList);
-            RingList.Node node4 = ringList.add("127.0.0.1", "8004");
+            RingList.Node node4 = ringList.add("127.0.0.1", "8004", null);
             System.out.println("Added: " + node4);
             System.out.println(ringList);
-            RingList.Node node5 = ringList.add("127.0.0.1", "8005");
+            RingList.Node node5 = ringList.add("127.0.0.1", "8005", null);
             System.out.println("Added: " + node5);
             System.out.println(ringList);
 
@@ -64,11 +64,11 @@ public class Testing {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        ringList.add("12","1000");
-        ringList.add("17","1000");
-        ringList.add("19","1000");
-        ringList.add("21", "1000");
-        ringList.add("22", "1000");
+        ringList.add("12","1000", null);
+        ringList.add("17","1000", null);
+        ringList.add("19","1000", null);
+        ringList.add("21", "1000", null);
+        ringList.add("22", "1000", null);
 
         ringList.remove("19","1000");
         ringList.remove("17", "1000");

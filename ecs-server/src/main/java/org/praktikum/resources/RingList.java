@@ -19,10 +19,14 @@ public class RingList {
      *
      * @param IP
      * @param port
+     * @param hashString A custom endRange provided in the startup of the KVServer
      * @return the new node
      */
-    public synchronized Node add(String IP, String port) {
-        String hashString = getMD5Hash(IP, port);
+    public synchronized Node add(String IP, String port, String hashString) {
+        // If no custom hash string has been provided, calculate it based on the old logic.
+        if (hashString == null ) {
+            hashString = getMD5Hash(IP, port);
+        }
 
         Node previousNode = find(hashString);
 
@@ -42,6 +46,7 @@ public class RingList {
 
         return newNode;
     }
+
 
     /**
      * Removes the node with the given hash from the list.

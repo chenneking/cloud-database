@@ -47,9 +47,9 @@ public class ECSCommunication implements Runnable {
      * @throws RuntimeException if any communication error occurs with the new server or its predecessor.
      */
 
-    public synchronized void addNewKVServer() {
+    public synchronized void addNewKVServer(String hashString) {
         //recalculates the Metadata since a new StorageService connected
-        AbstractMap.SimpleEntry<ECSCommunication, String> entry = ecsServer.addEscCommunication(ip, port);
+        AbstractMap.SimpleEntry<ECSCommunication, String> entry = ecsServer.addEscCommunication(ip, port, hashString);
         prevConnection = entry.getKey();
         //Initialize the new storage server with the updated meta
         sendMetaData();
@@ -74,6 +74,11 @@ public class ECSCommunication implements Runnable {
             case "kvServer" -> {
                 port = tokens[1];
                 ip = tokens[2];
+                // If the KVServer provides a customized endrange that it would like, pass it on to the startup logic, keep it null otherwise.
+                String customHashString = null;
+                if (tokens.length == 4) {
+                    customHashString = tokens[3];
+                }
                 ecsServer.ecsCommunicationHashMap.put(ip.concat(port), this);
                 //finds the right successor for every request, as the connection isn't notified about updates and the successor might be outdated.
                 //successor = ecsServer.findSuccessorConnection(ip, port);
@@ -86,7 +91,7 @@ public class ECSCommunication implements Runnable {
                 }
                 messageHandler.send("connection_ecs_established");
                 sent(ip, port, "connection_ecs_established");
-                addNewKVServer();
+                addNewKVServer(customHashString);
             }
             //KVServer tries to close
             case "close" -> {

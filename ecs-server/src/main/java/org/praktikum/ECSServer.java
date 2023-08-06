@@ -69,12 +69,13 @@ public class ECSServer {
      *
      * @param ip   The IP address of the server to be added.
      * @param port The port number of the server to be added.
+     * @param hashString A custom endRange provided in the startup of the KVServer
      * @return An `AbstractMap.SimpleEntry` where the key is the ECSCommunication of the successor,
      * and the value is the hash range start value that the successor is responsible for.
      */
 
-    public AbstractMap.SimpleEntry<ECSCommunication, String> addEscCommunication(String ip, String port) {
-        RingList.Node node = ringList.add(ip, port).getNext();
+    public AbstractMap.SimpleEntry<ECSCommunication, String> addEscCommunication(String ip, String port, String hashString) {
+        RingList.Node node = ringList.add(ip, port, hashString).getNext();
         String keyRange = node.getStartRange();
         return new AbstractMap.SimpleEntry<>(ecsCommunicationHashMap.get(node.getIP().concat(node.getPort())), keyRange);
     }
