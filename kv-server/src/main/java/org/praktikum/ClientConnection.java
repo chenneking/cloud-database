@@ -81,7 +81,10 @@ public class ClientConnection implements Runnable {
                 }
                 put(tokens[1], builder.toString());
                 try {
-                    determineOffloadPartner();
+                    //ToDo replace with actual variable instead of arbitrary value
+                    if(usageMetrics.getOperationsLast30s()  > 30){
+                        offloadKeys();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -290,7 +293,7 @@ public class ClientConnection implements Runnable {
         }
 
     }
-    private synchronized void determineOffloadPartner() throws IOException {
+    private synchronized void offloadKeys() throws IOException {
         RingList.Node node = kvServer.getRingList().findByIPandPort(kvServer.getAddress(), Integer.toString(kvServer.getPort()));
         RingList.Node nodeNext = node.getNext();
         RingList.Node nodePrev = node.getPrev();
@@ -324,7 +327,6 @@ public class ClientConnection implements Runnable {
             changeKeyRangeRequest(keyRange[0], keyRange[1]);
             messageHandlerNext.send("release_write_lock");
             kvServer.setWriteLock(false);
-
         }
         else{
             messageHandlerPrev.send("set_write_lock");
@@ -334,7 +336,6 @@ public class ClientConnection implements Runnable {
             messageHandlerPrev.send("release_write_lock");
             kvServer.setWriteLock(false);
         }
-
         messageHandlerNext.close();
         messageHandlerPrev.close();
         socketNext.close();

@@ -178,24 +178,7 @@ public class Client implements SignalHandler {
                 requestKeyRangeRead();
                 handleServerResponse(tokens);
             }
-            case "get_frequency_table" ->{
-                if (! isConnected) {
-                    print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
-                    break;
-                }
-                sendString("get_frequency_table");
-                handleServerResponse(tokens);
 
-            }
-            case "get_usage_metrics" ->{
-                if (! isConnected) {
-                    print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
-                    break;
-                }
-                sendString("get_usage_metrics");
-                handleServerResponse(tokens);
-
-            }
             case "logLevel" -> {
                 if (tokens.length > 2) {
                     error();
@@ -262,7 +245,7 @@ public class Client implements SignalHandler {
 
         String keyHash = hashing.getMD5Hash(key);
 
-       // RingList.Node random_replica = ringList.getRandomNodeFromKey(keyHash);
+        // RingList.Node random_replica = ringList.getRandomNodeFromKey(keyHash);
         RingList.Node node = ringList.findByHashKey(keyHash);
         if (ringList.getFromReplica(client.getInetAddress().getHostAddress(),Integer.toString(client.getPort()),keyHash)) {
             int port = Integer.parseInt(node.getPort());
@@ -308,20 +291,32 @@ public class Client implements SignalHandler {
             if (received != null) {
                 System.out.print(PROMPT + new String(received));
             }
-            
+
         } catch (IOException e) {
             print("An error occurred while the creating the connection! Please try again.");
             print(e.getMessage());
             log.warning("Error while trying to connect to " + client.getInetAddress().getHostName() + ":" + client.getPort());
         }
     }
+    //client put,get and delete wrapper for benchmarking
+    public void putPublic(String key, String value){
+        executeCommand(new String[]{"put", key, value});
+    }
+    public void getPublic(String key){
+        executeCommand(new String[]{"get", key});
+    }
+    public void deletePublic(String key, String value){
+        executeCommand(new String[]{"delete", key, value});
+    }
+    public void connectPublic(String address, int port){
+        executeCommand(new String[]{"connect",address,Integer.toString(port)});
 
+    }
     /**
      * Handles responses received from the server after a command execution.
      *
      * @param tokens the tokens of the issued command
      */
-
     private void handleServerResponse(String[] tokens) {
         byte[] received = receive();
         if (received != null) {
