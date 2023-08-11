@@ -80,7 +80,7 @@ public class ClientConnection implements Runnable {
                 }
                 put(tokens[1], builder.toString());
                 try {
-                    if(kvServer.getUsageMetrics().getOperationsLast30s() > OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                    if(kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD){
                         offloadKeys();
                     }
                 } catch (IOException e) {
@@ -94,7 +94,7 @@ public class ClientConnection implements Runnable {
                 }
                 get(tokens[1]);
                 try {
-                    if(kvServer.getUsageMetrics().getOperationsLast30s() > OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                    if(kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD){
                         offloadKeys();
                     }
                 } catch (IOException e) {
@@ -108,7 +108,7 @@ public class ClientConnection implements Runnable {
                 }
                 delete(tokens[1]);
                 try {
-                    if(kvServer.getUsageMetrics().getOperationsLast30s() > OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                    if(kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD){
                         offloadKeys();
                     }
                 } catch (IOException e) {
@@ -118,7 +118,7 @@ public class ClientConnection implements Runnable {
             case "save_data" -> {
                 String[] dataToSend = Arrays.copyOfRange(tokens, 1, tokens.length);
                 String data = String.join(" ", dataToSend);
-                System.out.println("Received: save_data " + data);
+                //System.out.println("Received: save_data " + data);
                 storageUnit.saveData(data, true);
                 close();
             }
@@ -143,12 +143,12 @@ public class ClientConnection implements Runnable {
                         builder.append(" ");
                     }
                 }
-                System.out.println("Received: server_put " + tokens[1] + " " + tokens[2] + " " + tokens[3] + " " + builder);
+                //System.out.println("Received: server_put " + tokens[1] + " " + tokens[2] + " " + tokens[3] + " " + builder);
                 serverPut(tokens[1], tokens[2], tokens[3], builder.toString());
                 close();
             }
             case "server_delete" -> {
-                System.out.println("server_delete " + tokens[1] + " " + tokens[2] + " " + tokens[3]);
+                //System.out.println("server_delete " + tokens[1] + " " + tokens[2] + " " + tokens[3]);
                 serverDelete(tokens[1], tokens[2], tokens[3]);
                 close();
             }
@@ -157,7 +157,7 @@ public class ClientConnection implements Runnable {
             case "request_replica_data" -> {
                 String allData = storageUnit.getAllData();
                 messageHandler.send(allData);
-                System.out.println("Sent (replication data): " + allData);
+                //System.out.println("Sent (replication data): " + allData);
             }
             case "replica_data_update" -> {
                 StringBuilder builder = new StringBuilder();
@@ -170,7 +170,7 @@ public class ClientConnection implements Runnable {
                 }
                 String data = builder.toString();
 
-                System.out.println(new Date().getTime() + " Received: " + tokens[0] + " " + tokens[1] + " " + tokens[2] + " " + data);
+                //System.out.println(new Date().getTime() + " Received: " + tokens[0] + " " + tokens[1] + " " + tokens[2] + " " + data);
 
                 //find corresponding replica store and save the data with append = false (i.e OVERWRITE the old data)
                 String serverIPAndPort = tokens[1] + ":" + tokens[2];
@@ -308,10 +308,10 @@ public class ClientConnection implements Runnable {
                 MessageHandler messageHandlerNext = new MessageHandler(socketNext);
                 MessageHandler messageHandlerNextNext = new MessageHandler(socketNextNext);
 
-                System.out.println("Sent (to " + nodeNext.getIP() + ":" + nodeNext.getPort() + "): server_put " + key + " " + value);
+                //System.out.println("Sent (to " + nodeNext.getIP() + ":" + nodeNext.getPort() + "): server_put " + key + " " + value);
                 messageHandlerNext.send("server_put " + kvServer.getAddress() + " " + kvServer.getPort() + " " + key + " " + value);
 
-                System.out.println("Sent (to " + nodeNextNext.getIP() + ":" + nodeNextNext.getPort() + "): server_put " + key + " " + value);
+                //System.out.println("Sent (to " + nodeNextNext.getIP() + ":" + nodeNextNext.getPort() + "): server_put " + key + " " + value);
                 messageHandlerNextNext.send("server_put " + kvServer.getAddress() + " " + kvServer.getPort() + " " + key + " " + value);
             }
         } catch (IOException e) {
@@ -335,9 +335,9 @@ public class ClientConnection implements Runnable {
         messageHandlerPrev.send("get_usage_metrics_info");
         messageHandlerPrev.receive();
         int prevLoad = Integer.parseInt(new String(messageHandlerPrev.receive(), StandardCharsets.UTF_8).replace("\r\n", ""));
-        System.out.println("-----next load: " + nextLoad);
-        System.out.println("-----prev Load: " + prevLoad);
-        System.out.println("-----current Server load: " + kvServer.getUsageMetrics().toString());
+        System.out.println("Determined load of next server to be: " + nextLoad);
+        System.out.println("Determined load of previous server to be: " + prevLoad);
+        System.out.println("Current server load: " + kvServer.getUsageMetrics().toString());
 
 
         //if the load of the current Server is smaller than the load of the other 2 servers you do nothing
@@ -388,7 +388,7 @@ public class ClientConnection implements Runnable {
         }
         String hash = hashing.getMD5Hash(key);
         String bucketIPAndPort = checkIfRightServerGet(hash);
-        System.out.println("Determined " + key + " to be from server: " + bucketIPAndPort);
+        //System.out.println("Determined " + key + " to be from server: " + bucketIPAndPort);
         if (bucketIPAndPort == null) {
             messageHandler.send("server_not_responsible");
             return;
@@ -456,9 +456,9 @@ public class ClientConnection implements Runnable {
                 MessageHandler messageHandlerNext = new MessageHandler(socketNext);
                 MessageHandler messageHandlerNextNext = new MessageHandler(socketNextNext);
 
-                System.out.println("Sent: server_delete " + key);
+                //System.out.println("Sent: server_delete " + key);
                 messageHandlerNext.send("server_delete " + kvServer.getAddress() + " " + kvServer.getPort() + " " + key);
-                System.out.println("Sent: server_delete " + key);
+                //System.out.println("Sent: server_delete " + key);
                 messageHandlerNextNext.send("server_delete " + kvServer.getAddress() + " " + kvServer.getPort() + " " + key);
 
             }
