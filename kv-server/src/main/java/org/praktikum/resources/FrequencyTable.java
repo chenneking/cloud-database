@@ -145,6 +145,9 @@ public class FrequencyTable {
             }
             endRange = buckets.get(bucketIndex).getEndRange();
             if (bucketIndex >= 0) {
+                if(buckets.subList(0, bucketIndex + 1).size() == buckets.size()){
+                    return new String[]{startRange, startRange};
+                }
                 buckets.subList(0, bucketIndex + 1).clear();
             }
             return new String[]{startRange, endRange};
@@ -165,6 +168,9 @@ public class FrequencyTable {
             }
             endRange = buckets.get(bucketIndex).getStartRange();
             if (bucketIndex >= 0) {
+                if(buckets.subList(bucketIndex, buckets.size()).size() == buckets.size()){
+                    return new String[]{endRange, endRange};
+                }
                 buckets.subList(bucketIndex, buckets.size()).clear();
             }
             return new String[]{endRange, startRange};

@@ -95,6 +95,11 @@ public class Testing {
         String[] calculatedRanges = frequencyTable.calculateOffloadKeyRange(true);
         assertEquals("10000000000000000000000000000000", calculatedRanges[0]);
         assertEquals("20000000000000000000000000000000", calculatedRanges[1]);
+        frequencyTable.calculateOffloadKeyRange(true);
+        frequencyTable.calculateOffloadKeyRange(true);
+        frequencyTable.calculateOffloadKeyRange(true);
+
+
     }
 
     @Test
@@ -109,6 +114,9 @@ public class Testing {
         String[] calculatedRanges = frequencyTable.calculateOffloadKeyRange(false);
         assertEquals("30000000000000000000000000000000", calculatedRanges[0]);
         assertEquals("40000000000000000000000000000000", calculatedRanges[1]);
+        frequencyTable.calculateOffloadKeyRange(false);
+        frequencyTable.calculateOffloadKeyRange(false);
+        frequencyTable.calculateOffloadKeyRange(false);
     }
 }
 
