@@ -9,34 +9,46 @@ import java.util.LinkedHashMap;
 
 public class LRUCache extends Cache {
 
-
+    /**
+     * Constructs a new LRUCache instance with the specified maximum size and a persistent storage mechanism.
+     *
+     * @param maxSize           Maximum size for the cache.
+     * @param persistentStorage The persistent storage mechanism to interact with.
+     */
     public LRUCache(int maxSize, PersistentStorage persistentStorage) {
         super(maxSize, persistentStorage);
     }
 
     public LinkedHashMap<String, String> activityLog = new LinkedHashMap<>();
 
-
+    /**
+     * Logs the most recent access of the provided key-value pair.
+     *
+     * @param key   The key of the accessed item.
+     * @param value The value of the accessed item.
+     */
     private void addActivity(String key, String value) {
         activityLog.remove(key, value);
         activityLog.put(key, value);
     }
 
     /**
-     * Retrieves the value corresponding to the given key from the cache or persistent storage via LRU strategy.
+     * Retrieves the value associated with the provided key from the cache or persistent storage.
+     * If the key is found in the cache, it updates the LRU log.
+     * If the key is not present in the cache but found in the persistent storage,
+     * it brings the key-value pair into the cache and evicts the least recently used entry if necessary.
      *
-     * @param key the key to be searched for.
-     * @return KVPair representing the key-value pair if it exists in the cache or persistent storage; null otherwise.
+     * @param key A string representing the key associated with the desired value.
+     * @return KVPair<String, String> representing the key-value pair if the key is found,
+     * or null if the key is not found in either the cache or persistent storage.
      */
-
     @Override
     public KVPair<String, String> get(String key) {
         String value = hashMap.get(key);
         if (value != null) {
             addActivity(key, value);
             return new KVPair<>(key, value);
-        }
-        else {
+        } else {
             KVPair<String, String> kvPair = persistentStorage.get(key);
             //kv pair is null since we cant get the value from the persistent storage
             if (kvPair != null) {
@@ -58,11 +70,13 @@ public class LRUCache extends Cache {
     }
 
     /**
-     * Stores the key-value pair in the cache or if the cache is full in the persistent storage , utilizing the LRU strategy.
+     * Stores the provided key-value pair in the cache and in the persistent storage.
+     * If the cache reaches its capacity, it evicts the least recently used entry.
+     * It then updates the LRU log for the provided key.
      *
-     * @param key   the key to be stored.
-     * @param value the value to be stored.
-     * @return PutResult representing the status of the put operation in the persistent storage.
+     * @param key   The key to be stored.
+     * @param value The value to be associated with the key.
+     * @return PutResult indicating the result of the operation in the persistent storage.
      */
     @Override
     public PutResult put(String key, String value) {

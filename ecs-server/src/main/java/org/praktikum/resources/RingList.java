@@ -10,21 +10,28 @@ public class RingList {
 
     private final MessageDigest digest;
 
+    /**
+     * Constructor for the RingList class.
+     * Initializes the digest with an MD5 hash algorithm.
+     *
+     * @throws NoSuchAlgorithmException if the "MD5" algorithm isn't available.
+     */
     public RingList() throws NoSuchAlgorithmException {
         this.digest = MessageDigest.getInstance("MD5");
     }
 
     /**
-     * Adds a node, with the IP and port given, to the ringlist
+     * Adds a new node to the ring list based on the provided IP, port, and hash string.
+     * If no hash string is provided, an MD5 hash of the IP and port is used.
      *
-     * @param IP
-     * @param port
-     * @param hashString A custom endRange provided in the startup of the KVServer
-     * @return the new node
+     * @param IP         The IP address of the node to be added.
+     * @param port       The port number of the node to be added.
+     * @param hashString A custom end range hash string provided during server startup. If null, a new hash will be generated.
+     * @return The newly added node.
      */
     public synchronized Node add(String IP, String port, String hashString) {
         // If no custom hash string has been provided, calculate it based on the old logic.
-        if (hashString == null ) {
+        if (hashString == null) {
             hashString = getMD5Hash(IP, port);
         }
 
@@ -33,8 +40,7 @@ public class RingList {
         Node newNode;
         if (previousNode == null) {
             newNode = new Node(IP, port, hashString);
-        }
-        else {
+        } else {
             newNode = new Node(previousNode, IP, port, hashString);
         }
         // Adjusts the head pointer if the list is currently empty.
@@ -49,22 +55,17 @@ public class RingList {
 
 
     /**
-     * Removes the node with the given hash from the list.
-     * <p>
-     * This method removes the node with the specified hash from the list, adjusting the neighboring nodes and the head of the list accordingly.
-     * If the list has 0 nodes, it simply returns null. If the list has 1 node, it removes that node and sets head to null. If the list has 2 nodes,
-     * it removes the appropriate node and updates the remaining node's next and previous references to point to itself. For a list with more than 2 nodes,
-     * it removes the appropriate node and updates the next and previous references of the neighboring nodes. If the head of the list is being removed,
-     * the head reference is updated to point to the previous node.
+     * Removes a node from the ring list based on the provided hash string.
+     * Adjusts the neighboring nodes and the head of the list accordingly.
+     * The logic for removal varies based on the current size of the list.
      *
      * @param hashString The hash of the node to be removed.
-     * @return The removed node. Returns null if the list was empty.
+     * @return The node that was removed, or null if the list was empty.
      */
     public synchronized Node remove(String hashString) {
         if (size == 0) {
             return null;
-        }
-        else if (size == 1) {
+        } else if (size == 1) {
             Node node = head;
             head = null;
             size--;
@@ -81,8 +82,7 @@ public class RingList {
             if (toBeRemovedNode == head) {
                 head = prev;
             }
-        }
-        else {
+        } else {
             toBeRemovedNode.getPrev().setNext(toBeRemovedNode.getNext());
             toBeRemovedNode.getPrev().setEndRange(toBeRemovedNode.getEndRange());
             toBeRemovedNode.getNext().setPrev(toBeRemovedNode.getPrev());
@@ -96,11 +96,12 @@ public class RingList {
     }
 
     /**
-     * Generates an MD5 hash for a server's IP and port.
+     * Generates an MD5 hash based on a server's IP and port.
+     * The resulting hash is represented as a 32-character hexadecimal string.
      *
-     * @param IP   The IP address of the server.
-     * @param port The port number of the server.
-     * @return A 32-character hexadecimal string representing the MD5 hash of the server's IP and port.
+     * @param IP   The IP address for which the hash needs to be generated.
+     * @param port The port number for which the hash needs to be generated.
+     * @return The MD5 hash of the IP and port.
      */
     public String getMD5Hash(String IP, String port) {
         byte[] hash = this.digest.digest((IP + ":" + port).getBytes());
@@ -109,17 +110,18 @@ public class RingList {
     }
 
     /**
-     * Removes a node with given IP and port form ringlist
+     * Removes a node from the ring list based on the provided IP and port.
+     * Adjusts the neighboring nodes and the head of the list accordingly.
+     * The logic for removal varies based on the current size of the list.
      *
-     * @param IP
-     * @param port
-     * @return the removed node
+     * @param IP   The IP address of the node to be removed.
+     * @param port The port number of the node to be removed.
+     * @return The node that was removed, or null if the list was empty.
      */
     public synchronized Node remove(String IP, String port) {
         if (size == 0) {
             return null;
-        }
-        else if (size == 1) {
+        } else if (size == 1) {
             Node node = head;
             head = null;
             size--;
@@ -136,8 +138,7 @@ public class RingList {
             if (toBeRemovedNode == head) {
                 head = prev;
             }
-        }
-        else {
+        } else {
             toBeRemovedNode.getPrev().setNext(toBeRemovedNode.getNext());
             toBeRemovedNode.getPrev().setEndRange(toBeRemovedNode.getEndRange());
             toBeRemovedNode.getNext().setPrev(toBeRemovedNode.getPrev());
@@ -150,11 +151,13 @@ public class RingList {
         return toBeRemovedNode;
     }
 
+
     /**
-     * Finds the node where the given key fits within the start and end ranges.
+     * Searches for a node in the ring list based on a given hash key.
+     * The method traverses the list and returns the node whose start and end hash ranges encompass the provided key.
      *
-     * @param key hash key
-     * @return The found node or null if non-existant
+     * @param key The hash key used to search for a node.
+     * @return The node that matches the criteria or null if no such node exists.
      */
     public Node find(String key) {
         if (size == 0) {
@@ -169,12 +172,10 @@ public class RingList {
         do {
             if (node.getStartRange().compareTo(key) < 0 && node.getEndRange().compareTo(key) >= 0) {
                 return node;
-            }
-            else if (node.getStartRange().compareTo(node.getEndRange()) >= 0) {
+            } else if (node.getStartRange().compareTo(node.getEndRange()) >= 0) {
                 if (node.getStartRange().compareTo(key) < 0 && node.getEndRange().compareTo(key) <= 0) {
                     return node;
-                }
-                else if (node.getStartRange().compareTo(key) > 0 && node.getEndRange().compareTo(key) >= 0) {
+                } else if (node.getStartRange().compareTo(key) > 0 && node.getEndRange().compareTo(key) >= 0) {
                     return node;
                 }
             }
@@ -183,6 +184,14 @@ public class RingList {
         return null;
     }
 
+    /**
+     * Searches for a node in the ring list based on the provided IP address and port.
+     * The method traverses the list and returns the node that matches the given IP address and port.
+     *
+     * @param address The IP address used to search for a node.
+     * @param port    The port number used to search for a node.
+     * @return The node that matches the provided IP address and port or null if no such node exists.
+     */
     public Node find(String address, String port) {
         if (size == 0) {
             return null;
@@ -202,6 +211,15 @@ public class RingList {
         return null;
     }
 
+    /**
+     * Updates the hash ranges of a node identified by the provided IP address and port.
+     * This method updates the start and end hash ranges of the specified node and adjusts the neighboring nodes accordingly.
+     *
+     * @param ip         The IP address of the node to be updated.
+     * @param port       The port number of the node to be updated.
+     * @param startRange The new start hash range for the node.
+     * @param endRange   The new end hash range for the node.
+     */
     public synchronized void updateKeyRanges(String ip, String port, String startRange, String endRange) {
         Node node = find(ip, port);
         // Update startRange
@@ -214,10 +232,12 @@ public class RingList {
     }
 
     /**
-     * Converts the ring list to a string representation.
+     * Provides a string representation of the ring list.
+     * The method iterates over the list and builds a string that displays the hash ranges and addresses of each node.
      *
-     * @return A string representation of the ring list, or null if the list is empty.
+     * @return A concatenated string representation of the ring list. Returns null if the list is empty.
      */
+
     @Override
     public String toString() {
         if (size == 0) {
@@ -251,6 +271,14 @@ public class RingList {
         private String startRange;
         private String endRange;
 
+        /**
+         * Constructs a standalone node with the given IP, port, and hash range.
+         * The node's next and previous pointers initially point to itself.
+         *
+         * @param IP       IP address of the server.
+         * @param port     Port of the server.
+         * @param endRange The hash range of the server.
+         */
         public Node(String IP, String port, String endRange) {
             this.prev = this;
             this.next = this;
@@ -260,6 +288,14 @@ public class RingList {
             this.endRange = endRange;
         }
 
+        /**
+         * Constructs a node and inserts it before the given 'prev' node in the list.
+         *
+         * @param prev     The reference node before which the new node will be inserted.
+         * @param IP       IP address of the server.
+         * @param port     Port of the server.
+         * @param endRange The hash range of the server.
+         */
         public Node(Node prev, String IP, String port, String endRange) {
             this.IP = IP;
             this.port = port;

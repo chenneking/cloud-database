@@ -22,10 +22,17 @@ public class FrequencyTable {
 
     //each array list represents the bucket for the keyRange saved in the String
     private ArrayList<Bucket> buckets;
+
+    /**
+     * Constructs a FrequencyTable with the given parameters.
+     *
+     * @param numberOfBuckets  Number of buckets to be created.
+     * @param offloadThreshold The threshold for offloading keys.
+     */
     public FrequencyTable(int numberOfBuckets, int offloadThreshold) {
         this.numberOfBuckets = numberOfBuckets;
         this.offloadThreshold = offloadThreshold;
-        if(offloadThreshold > 50 || offloadThreshold < 0){
+        if (offloadThreshold > 50 || offloadThreshold < 0) {
             throw new NumberFormatException();
         }
         try {
@@ -34,17 +41,26 @@ public class FrequencyTable {
             throw new RuntimeException(e);
         }
     }
+
     public ArrayList<Bucket> getBuckets() {
         return buckets;
     }
+
     public int getNumberOfBuckets() {
         return numberOfBuckets;
     }
+
+    /**
+     * Updates the buckets based on the new key range.
+     *
+     * @param startKeyRange Start range of the keys.
+     * @param endKeyRange   End range of the keys.
+     */
     public void updateBuckets(String startKeyRange, String endKeyRange) {
         if (buckets == null || buckets.size() == 0) {
             createBuckets(startKeyRange, endKeyRange);
         } else {
-            if (! startKeyRange.equals(buckets.get(0).getStartRange()) || ! endKeyRange.equals(buckets.get(buckets.size() - 1).getEndRange()) || buckets.size() < numberOfBuckets) {
+            if (!startKeyRange.equals(buckets.get(0).getStartRange()) || !endKeyRange.equals(buckets.get(buckets.size() - 1).getEndRange()) || buckets.size() < numberOfBuckets) {
                 List<String> allKeys = new LinkedList<>();
                 for (Bucket bucket : buckets) {
                     allKeys.addAll(bucket.getBucketList());
@@ -56,7 +72,14 @@ public class FrequencyTable {
             }
         }
     }
-    public void createBuckets(String startKeyRange, String endKeyRange){
+
+    /**
+     * Creates buckets based on the given key range.
+     *
+     * @param startKeyRange Start range of the keys.
+     * @param endKeyRange   End range of the keys.
+     */
+    public void createBuckets(String startKeyRange, String endKeyRange) {
         BigInteger startRange = new BigInteger(startKeyRange, 16);
         BigInteger endRange = new BigInteger(endKeyRange, 16);
 
@@ -64,16 +87,14 @@ public class FrequencyTable {
         BigInteger totalRange;
         if (startRange.compareTo(endRange) > 0) {
             totalRange = MAX_VALUE.subtract(startRange).add(BigInteger.ONE).add(endRange);
-        }
-        else if (startRange.equals(endRange)) {
+        } else if (startRange.equals(endRange)) {
             totalRange = MAX_VALUE.add(BigInteger.ONE);
-        }
-        else {
+        } else {
             totalRange = endRange.subtract(startRange);
         }
 
         //if there are fewer values in the range than requested amount of buckets, we reduce the bucket count.
-        if (totalRange.compareTo(BigInteger.valueOf(numberOfBuckets)) < 0){
+        if (totalRange.compareTo(BigInteger.valueOf(numberOfBuckets)) < 0) {
             numberOfBuckets = totalRange.intValue();
         }
 
@@ -87,7 +108,7 @@ public class FrequencyTable {
 
         for (int i = 0; i < numberOfBuckets; i++) {
             BigInteger bucketEndRange = startRange.add(bucketSize);
-            if (i < remainder.intValue()){
+            if (i < remainder.intValue()) {
                 bucketEndRange = bucketEndRange.add(BigInteger.ONE);
             }
             // Wrap around case
@@ -101,7 +122,13 @@ public class FrequencyTable {
             }
         }
     }
-    public void addDummyBucket(String data){
+
+    /**
+     * Adds a dummy bucket with given data.
+     *
+     * @param data Data to be added to the dummy bucket.
+     */
+    public void addDummyBucket(String data) {
         String[] split = data.trim().split(";");
 
         String dummyStartAndEnd = buckets.get(0).getStartRange();
@@ -112,24 +139,44 @@ public class FrequencyTable {
         }
         buckets.add(dummyBucket);
     }
+
+    /**
+     * Adds a key to the table.
+     *
+     * @param key  Key to be added.
+     * @param hash Hash of the key.
+     */
     public void addToTable(String key, String hash) {
         totalBucketSize += 1;
         for (Bucket bucket : buckets) {
             bucket.insert(key, hash);
         }
     }
-    public void deleteFromTable(String key, String hash){
+
+    /**
+     * Removes a key from the table.
+     *
+     * @param key  Key to be removed.
+     * @param hash Hash of the key.
+     */
+    public void deleteFromTable(String key, String hash) {
         totalBucketSize -= 1;
         for (Bucket bucket : buckets) {
             bucket.delete(key, hash);
         }
     }
-    // lower: von links, nicht lower: von rechts
-    public String [] calculateOffloadKeyRange(boolean lower) {
+
+    /**
+     * Calculates the range of keys to be offloaded.
+     *
+     * @param lower If true, offload from the lower end, otherwise offload from the higher end.
+     * @return An array containing the start and end range of keys to be offloaded.
+     */
+    public String[] calculateOffloadKeyRange(boolean lower) {
         String startRange;
         String endRange;
 
-        if(lower){
+        if (lower) {
             int bucketIndex = 0;
             startRange = buckets.get(0).getStartRange();
             int cumulativeBucketSize = 0;
@@ -139,36 +186,35 @@ public class FrequencyTable {
                 if (percentage >= offloadThreshold) {
                     break;
                 }
-                if(bucketIndex < buckets.size()-1){
+                if (bucketIndex < buckets.size() - 1) {
                     bucketIndex++;
                 }
             }
             endRange = buckets.get(bucketIndex).getEndRange();
             if (bucketIndex >= 0) {
-                if(buckets.subList(0, bucketIndex + 1).size() == buckets.size()){
+                if (buckets.subList(0, bucketIndex + 1).size() == buckets.size()) {
                     return new String[]{startRange, startRange};
                 }
                 buckets.subList(0, bucketIndex + 1).clear();
             }
             return new String[]{startRange, endRange};
-        }
-        else{
+        } else {
             int bucketIndex = buckets.size() - 1;
-            startRange = buckets.get(buckets.size()-1).getEndRange();
+            startRange = buckets.get(buckets.size() - 1).getEndRange();
             int cumulativeBucketSize = 0;
-            for(int j = buckets.size()-1; j >= 0; j--){
+            for (int j = buckets.size() - 1; j >= 0; j--) {
                 cumulativeBucketSize += buckets.get(j).size();
                 double percentage = cumulativeBucketSize == 0 ? 0 : BigInteger.valueOf(cumulativeBucketSize).doubleValue() / BigInteger.valueOf(totalBucketSize).doubleValue() * 100;
-                if(percentage >= offloadThreshold){
+                if (percentage >= offloadThreshold) {
                     break;
                 }
-                if(bucketIndex > 0){
-                    bucketIndex --;
+                if (bucketIndex > 0) {
+                    bucketIndex--;
                 }
             }
             endRange = buckets.get(bucketIndex).getStartRange();
             if (bucketIndex >= 0) {
-                if(buckets.subList(bucketIndex, buckets.size()).size() == buckets.size()){
+                if (buckets.subList(bucketIndex, buckets.size()).size() == buckets.size()) {
                     return new String[]{endRange, endRange};
                 }
                 buckets.subList(bucketIndex, buckets.size()).clear();
@@ -177,18 +223,25 @@ public class FrequencyTable {
         }
 
     }
-    public void removeBucket(int countToRemove, boolean lower){
-        if(lower){
+
+    /**
+     * Removes a number of buckets from the table.
+     *
+     * @param countToRemove Number of buckets to remove.
+     * @param lower         If true, remove from the lower end, otherwise remove from the higher end.
+     */
+    public void removeBucket(int countToRemove, boolean lower) {
+        if (lower) {
             if (countToRemove > 0) {
                 buckets.subList(0, countToRemove).clear();
             }
-        }
-        else{
+        } else {
             if (countToRemove > 0) {
-                buckets.subList(0, buckets.size()-countToRemove).clear();
+                buckets.subList(0, buckets.size() - countToRemove).clear();
             }
         }
     }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -220,6 +273,11 @@ public class FrequencyTable {
         return builder.toString();
     }
 
+    /**
+     * Retrieves information about all the buckets.
+     *
+     * @return A string representation of the bucket information.
+     */
     public String getAllInfo() {
         StringBuilder builder = new StringBuilder();
 

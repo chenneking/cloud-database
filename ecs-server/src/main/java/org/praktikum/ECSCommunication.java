@@ -15,6 +15,13 @@ public class ECSCommunication implements Runnable {
     private final Socket clientSocket;
     private ECSCommunication prevConnection;
 
+    /**
+     * Constructor for the ECSCommunication class.
+     * Initializes the message handler with the provided client socket and sets the associated ECSServer.
+     *
+     * @param ecsServer    The associated ECSServer instance.
+     * @param clientSocket The client socket for communication.
+     */
     public ECSCommunication(ECSServer ecsServer, Socket clientSocket) {
         this.messageHandler = new ECSMessageHandler(clientSocket);
         this.ecsServer = ecsServer;
@@ -22,8 +29,10 @@ public class ECSCommunication implements Runnable {
         this.clientSocket = clientSocket;
     }
 
+
     /**
-     * Main method of the Thread. Sends a message to the client if connected successfully
+     * The main execution method for the ECSCommunication thread.
+     * It continuously listens for incoming messages and processes them until the connection is closed.
      */
     @Override
     public void run() {
@@ -33,8 +42,7 @@ public class ECSCommunication implements Runnable {
                 String clientRequest = new String(input, StandardCharsets.UTF_8);
                 received(ip, port, clientRequest);
                 executeRequest(clientRequest);
-            }
-            else {
+            } else {
                 //the input is null if the connected server disconnected
                 closeConnection();
             }
@@ -42,11 +50,11 @@ public class ECSCommunication implements Runnable {
     }
 
     /**
-     * Handles the addition of a new key-value server to the ECS.
+     * Adds a new Key-Value server to the ECS and recalculates metadata.
+     * Sends the updated metadata to the new server and triggers data transfer from the predecessor server if needed.
      *
-     * @throws RuntimeException if any communication error occurs with the new server or its predecessor.
+     * @param hashString Custom end range hash string provided during server startup.
      */
-
     public synchronized void addNewKVServer(String hashString) {
         //recalculates the Metadata since a new StorageService connected
         AbstractMap.SimpleEntry<ECSCommunication, String> entry = ecsServer.addEscCommunication(ip, port, hashString);
@@ -61,9 +69,10 @@ public class ECSCommunication implements Runnable {
 
 
     /**
-     * Provides the input validation and delegation of tasks for the different commands
+     * Parses and executes the provided request from the server.
+     * Based on the command, different actions are taken, such as adding a new KV server or updating metadata.
      *
-     * @param serverRequest A string array of command tokens
+     * @param serverRequest The raw request string from the server.
      */
     public synchronized void executeRequest(String serverRequest) {
         String[] tokens = serverRequest.trim().split("\\s+");
@@ -122,22 +131,23 @@ public class ECSCommunication implements Runnable {
             case "update_keyrange" -> {
                 String newStartRange = tokens[1];
                 String newEndRange = tokens[2];
-                ecsServer.updateKeyRanges(ip,port, newStartRange, newEndRange);
+                ecsServer.updateKeyRanges(ip, port, newStartRange, newEndRange);
                 ecsServer.sendMetaDataToAll();
             }
         }
     }
 
     /**
-     * Sets a write lock on the server
+     * Sends a write lock command to the server to prevent it from handling write operations.
      */
     public synchronized void setWriteLock() {
         messageHandler.send("set_write_lock");
         sent(ip, port, "set_write_lock");
     }
 
+
     /**
-     * Releses thge write lock
+     * Sends a command to the server to release any previously set write locks.
      */
     public synchronized void releaseWriteLock() {
         messageHandler.send("remove_write_lock");
@@ -145,11 +155,12 @@ public class ECSCommunication implements Runnable {
     }
 
     /**
-     * Gets the data form the given key range from the server with the ip and port
+     * Requests a given server to send data for a specific hash range.
+     * This is typically used during data migration between servers.
      *
-     * @param ip       from the server
-     * @param port     form the server
-     * @param keyRange of the data
+     * @param ip       IP address of the server to request data from.
+     * @param port     Port number of the server to request data from.
+     * @param keyRange Hash range of the data to be requested.
      */
     public synchronized void getDataFromKeyRange(String ip, String port, String keyRange) {
         messageHandler.send("request_data_key_range " + ip + " " + port + " " + keyRange);
@@ -157,17 +168,20 @@ public class ECSCommunication implements Runnable {
     }
 
     /**
-     * Sends a string via the message handler
+     * Sends a message to a client via the message handler.
+     * Additionally, logs the sent message with associated IP and port.
      *
-     * @param message
+     * @param message The message to be sent.
      */
     private void send(String message) {
         messageHandler.send(message);
         sent(ip, port, message);
     }
 
+
     /**
-     * sends the metadata to the server with the ip and port
+     * Sends metadata to the client server identified by the current IP and port.
+     * Logs the sent metadata for debugging and tracking purposes.
      */
     public synchronized void sendMetaData() {
         messageHandler.send("metadata " + ecsServer.fetchMetaData());
@@ -175,39 +189,41 @@ public class ECSCommunication implements Runnable {
     }
 
     /**
-     * Prints out the a string with the ip ,port and the given String
+     * Logs a received message, indicating which client it came from.
+     * If IP or port are null, it logs a generic received message.
      *
-     * @param ip     of the ECS connection
-     * @param port   of the ECS connection
-     * @param string to be printed
+     * @param ip     The IP address from which the message was received.
+     * @param port   The port from which the message was received.
+     * @param string The received message.
      */
     private void received(String ip, String port, String string) {
         if (ip != null && port != null) {
             System.out.println("ECS CONNECTION " + ip + ":" + port + "| Received: " + string);
-        }
-        else {
+        } else {
             System.out.println("Received: " + string);
         }
     }
 
     /**
-     * Prints out the a string with the ip ,port and the given String
+     * Logs a sent message, indicating to which client it was sent.
+     * If IP or port are null, it logs a generic sent message.
      *
-     * @param ip     of the ECS connection
-     * @param port   of the ECS connection
-     * @param string to be printed
+     * @param ip     The IP address to which the message was sent.
+     * @param port   The port to which the message was sent.
+     * @param string The sent message.
      */
+
     private void sent(String ip, String port, String string) {
         if (ip != null && port != null) {
             System.out.println("ECS CONNECTION " + ip + ":" + port + "| Sent: " + string);
-        }
-        else {
+        } else {
             System.out.println("Sent: " + string);
         }
     }
 
     /**
-     * Closes the message handler and the socket
+     * Closes the current connection.
+     * It stops the message handler, closes the client socket, and updates the connection status.
      */
     public void closeConnection() {
         isOpen = false;

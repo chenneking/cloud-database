@@ -6,6 +6,13 @@ import java.util.logging.Level;
 
 public class EntryPoint {
 
+    /**
+     * Based on the provided flag, it sets the appropriate value in the flags array.
+     *
+     * @param flags Array holding values for each possible command-line argument.
+     * @param flag  The current command-line argument to process.
+     * @param value The value associated with the current command-line argument.
+     */
     private static void setFlag(String[] flags, String flag, String value) {
         switch (flag) {
             case "-p" -> flags[0] = value;
@@ -24,6 +31,9 @@ public class EntryPoint {
         }
     }
 
+    /**
+     * Prints the help text for the user, detailing each command-line argument and its usage.
+     */
     public static void printHelpText() {
         System.out.println("Arguments:");
         printArgumentHelp(
@@ -98,6 +108,15 @@ public class EntryPoint {
         //TODO: HIER OPTIMA IN DEFAULT VALUES UPDATEN
     }
 
+    /**
+     * Helper method to format and print the description of each command-line argument.
+     *
+     * @param command      The command flag.
+     * @param description  Description of the command.
+     * @param usage        How to use the command.
+     * @param example      An example of the command.
+     * @param defaultValue Default values associated with the command, if any.
+     */
     private static void printArgumentHelp(String command, String description, String usage, String example, String... defaultValue) {
         System.out.format("\n%-12s%s", command, description);
         if (usage != null) {
@@ -110,6 +129,11 @@ public class EntryPoint {
         System.out.println();
     }
 
+    /**
+     * Prints a message when the user provides an invalid input.
+     *
+     * @param flags Array holding values for each possible command-line argument.
+     */
     public static void printInvalidInput(String[] flags) {
         System.out.println("You provided invalid input! Please refer to the help page.");
         System.out.println(Arrays.toString(flags));

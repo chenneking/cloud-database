@@ -22,7 +22,14 @@ public class KVStore {
     private final String storageLocation;
     private final String filename;
 
-
+    /**
+     * Constructs a new KVStore with the specified cache size, displacement strategy, storage location, and filename.
+     *
+     * @param cacheSize            The maximum size of the cache.
+     * @param displacementStrategy The strategy to use for cache displacement (e.g., "FIFO", "LRU", "LFU").
+     * @param storageLocation      The location where the persistent storage is found.
+     * @param filename             The filename used for the persistent storage.
+     */
     public KVStore(int cacheSize, String displacementStrategy, String storageLocation, String filename) {
         persistentStorage = new PersistentStorage(storageLocation, filename);
         switch (displacementStrategy) {
@@ -36,21 +43,21 @@ public class KVStore {
     }
 
     /**
-     * puts a key value into the database
+     * Inserts or updates a key-value pair in the store.
      *
-     * @param key   String <key>
-     * @param value String <value>
-     * @return Enum of the result of the put operation
+     * @param key   The key to be stored.
+     * @param value The associated value.
+     * @return The result of the put operation.
      */
     public PutResult put(String key, String value) {
         return cache.put(key, value);
     }
 
     /**
-     * gets value from the database using the given key
+     * Retrieves the value associated with the given key.
      *
-     * @param key String <key>
-     * @return String <value> or null if it could not find the <key>
+     * @param key The key for which to retrieve the value.
+     * @return The value associated with the key, or null if the key is not found.
      */
     public String get(String key) {
         KVPair<String, String> result = cache.get(key);
@@ -61,10 +68,10 @@ public class KVStore {
     }
 
     /**
-     * deletes value from the database using the given key
+     * Removes the key-value pair associated with the provided key.
      *
-     * @param key String <key>
-     * @return String <value> or null if it could not delete the object
+     * @param key The key to be removed.
+     * @return The value that was associated with the key, or null if the key was not found.
      */
     public String delete(String key) {
         KVPair<String, String> result = cache.delete(key);
@@ -74,17 +81,18 @@ public class KVStore {
         return null;
     }
 
+
     /**
-     * Flushes the cache
+     * Clears all entries from the cache.
      */
     public void flushCache() {
         cache.flushCache();
     }
 
     /**
-     * Flushes the cache and gets all data from the persitant storage
+     * Clears the cache and retrieves all data from the persistent storage.
      *
-     * @return String with all the data
+     * @return A string representation of all data in the store.
      */
     public String getAllData() {
         cache.flushCache();
@@ -92,11 +100,11 @@ public class KVStore {
     }
 
     /**
-     * Gets the data between the keyranges from the persitant storage
+     * Retrieves data between specified key ranges from the persistent storage.
      *
-     * @param startKeyRange
-     * @param keyRangeToSplitAt
-     * @return
+     * @param startKeyRange     The start key of the range.
+     * @param keyRangeToSplitAt The end key of the range.
+     * @return A string representation of the data within the specified key range.
      */
     public String getDataBetweenKeyRanges(String startKeyRange, String keyRangeToSplitAt) {
         cache.flushCache();
@@ -109,17 +117,17 @@ public class KVStore {
     }
 
     /**
-     * Saves the data to the persistent storage
+     * Saves the provided data to the persistent storage.
      *
-     * @param data
-     * @param append
+     * @param data   The data to be saved.
+     * @param append If true, appends the data to existing data; otherwise, overwrites existing data.
      */
     public void saveData(String data, boolean append) {
         persistentStorage.saveData(data, append);
     }
 
     /**
-     * Clears the persitant storage
+     * Clears all entries from the persistent storage.
      */
     public void cleanPersistentStorage() {
         persistentStorage.clearFile();
@@ -137,6 +145,11 @@ public class KVStore {
         return filename;
     }
 
+    /**
+     * Deletes all data from the persistent storage.
+     *
+     * @return true if successful; false otherwise.
+     */
     public boolean deleteAllData() {
         return persistentStorage.deleteFile();
     }

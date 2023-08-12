@@ -15,16 +15,21 @@ public class PersistantStorageMultiThreaded {
     private final String storageLocation;
     private final String FILENAME = "StorageFile.csv";
 
+    /**
+     * Constructs a new PersistantStorageMultiThreaded instance.
+     *
+     * @param storageLocation The directory location where the storage file is located or will be created.
+     */
     public PersistantStorageMultiThreaded(String storageLocation) {
         this.storageLocation = storageLocation;
         initializePersistentStorage();
     }
 
     /**
-     * Retrieves the key-value pair associated with the given key by initiating a StorageThread to perform the get operation.
+     * Fetches the value associated with a given key from the storage.
      *
-     * @param key The key of the key-value pair to be retrieved.
-     * @return The key-value pair associated with the given key, or null if the key does not exist in the storage.
+     * @param key The key whose associated value is to be fetched.
+     * @return The key-value pair associated with the specified key, or null if the key is not present.
      */
     public KVPair<String, String> get(String key) {
         StorageThread storageThread = new StorageThread("get", key, null, storageLocation, FILENAME);
@@ -37,10 +42,11 @@ public class PersistantStorageMultiThreaded {
     }
 
     /**
-     * Writes or updates the key-value pair associated with the given key and vlaue by initiating a StorageThread to perform the put operation.
+     * Stores or updates a key-value pair in the storage.
      *
-     * @param key The key of the key-value pair to be retrieved.
-     * @return The key-value pair associated with the given key, or null if the key does not exist in the storage.
+     * @param key   The key to be stored.
+     * @param value The value associated with the key.
+     * @return The result of the put operation.
      */
     public PutResult put(String key, String value) {
         StorageThread storageThread = new StorageThread("put", key, value, storageLocation, FILENAME);
@@ -61,16 +67,15 @@ public class PersistantStorageMultiThreaded {
         String value = storageThread.getValue();
         if (value != null) {
             return new KVPair<>(key, value);
-        }
-        else {
+        } else {
             return null;
         }
     }
 
     /**
-     * Retrieves all data by initiating a StorageThread to perform the get operation.
+     * Fetches all the data present in the storage.
      *
-     * @return The key-value pair associated with the given key, or null if the key does not exist in the storage.
+     * @return A string representation of all data in the storage.
      */
     public String getAllData() {
         StorageThread storageThread = new StorageThread("getAll", null, null, storageLocation, FILENAME);
@@ -80,11 +85,11 @@ public class PersistantStorageMultiThreaded {
     }
 
     /**
-     * Initializes the persistent storage by ensuring the existence of the storage file.
+     * Initializes the persistent storage. This method ensures that the storage file exists.
+     * If the file doesn't exist, it will create one.
      *
      * @throws RuntimeException If there's an error during storage file creation.
      */
-    //has to create a data file if it does not exist already
     public void initializePersistentStorage() {
         try {
             Scanner input = new Scanner(new File("/" + storageLocation + "/" + FILENAME));

@@ -4,6 +4,13 @@ import java.util.Arrays;
 import java.util.logging.Level;
 
 public class EntryPoint {
+    /**
+     * Sets the flag value based on the provided flag.
+     *
+     * @param flags An array of flag values.
+     * @param flag  The flag to be set.
+     * @param value The value to assign to the flag.
+     */
     private static void setFlag(String[] flags, String flag, String value) {
         switch (flag) {
             case "-p" -> flags[0] = value;
@@ -14,6 +21,9 @@ public class EntryPoint {
         }
     }
 
+    /**
+     * Prints the help text showing how to use the application's arguments.
+     */
     public static void printHelpText() {
         System.out.println("Arguments:");
         printArgumentHelp(
@@ -40,6 +50,16 @@ public class EntryPoint {
                 "-ll INFO"
         );
     }
+
+    /**
+     * Prints the description, usage, example, and default value for a given command argument.
+     *
+     * @param command      The command argument.
+     * @param description  A brief description of the command.
+     * @param usage        How to use the command.
+     * @param example      An example usage of the command.
+     * @param defaultValue The default values for the command.
+     */
     private static void printArgumentHelp(String command, String description, String usage, String example, String... defaultValue) {
         System.out.format("\n%-12s%s", command, description);
         if (usage != null) {
@@ -52,6 +72,11 @@ public class EntryPoint {
         System.out.println();
     }
 
+    /**
+     * Prints an error message indicating that the input provided by the user is invalid.
+     *
+     * @param flags The flags provided by the user.
+     */
     public static void printInvalidInput(String[] flags) {
         System.out.println("You provided invalid input! Please refer to the help page.");
         System.out.println(Arrays.toString(flags));
@@ -68,7 +93,7 @@ public class EntryPoint {
             //check if it's a flag
             if (s.startsWith("-")) {
                 try {
-                    setFlag(flags, args[i], args[i+1]);
+                    setFlag(flags, args[i], args[i + 1]);
                 } catch (IndexOutOfBoundsException e) {
                     printHelpText();
                     return;
@@ -76,7 +101,7 @@ public class EntryPoint {
             }
         }
 
-        if(flags[0] == null || flags[1] == null || flags[2] == null || flags[3] == null) {
+        if (flags[0] == null || flags[1] == null || flags[2] == null || flags[3] == null) {
             printInvalidInput(flags);
             return;
         }
@@ -86,8 +111,7 @@ public class EntryPoint {
             Level logLevel = Level.parse(flags[3]);
             ECSServer ECS = new ECSServer(port, flags[1], flags[2], logLevel);
             ECS.runServer();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("An error occurred while starting up the server");
             System.out.println(e.getMessage());
         }

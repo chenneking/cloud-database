@@ -41,6 +41,21 @@ public class KVServer {
     private final FrequencyTable frequencyTable;
     private final UsageMetrics usageMetrics;
 
+    /**
+     * Constructs a KVServer instance with the given configurations.
+     *
+     * @param port                 The port on which the server will listen.
+     * @param address              The IP address of the server.
+     * @param bootstrapAddress     The address of the bootstrap server.
+     * @param storageLocation      The directory for persistent storage files on the server.
+     * @param logFilePath          The path for the log files on the server.
+     * @param logLevel             The logging level for the server.
+     * @param cacheSize            The cache size in terms of number of keys.
+     * @param displacementStrategy The cache displacement strategy.
+     * @param numberOfBuckets      The number of buckets for key range partitioning.
+     * @param offloadThreshold     The offload threshold for key range transfer.
+     * @param customEndRangeHash   Custom hash for end range.
+     */
     public KVServer(int port, String address, String bootstrapAddress, String storageLocation, String logFilePath, Level logLevel, int cacheSize, String displacementStrategy, int numberOfBuckets, int offloadThreshold, String customEndRangeHash) {
         this.port = port;
         this.isRunning = false;
@@ -68,18 +83,23 @@ public class KVServer {
             throw new RuntimeException(e);
         }
     }
+
     public KVStore getStore() {
         return store;
     }
+
     public String getAddress() {
         return address;
     }
+
     public int getPort() {
         return port;
     }
+
     public Map<String, KVStore> getReplicaStores() {
         return replicaStores;
     }
+
     public String getStartRange() {
         return startRange;
     }
@@ -109,21 +129,16 @@ public class KVServer {
     }
 
     /**
-     * Manages key range and replication.
-     * <p>
-     * If the server node exists within the ringList and its key range changes and the ringlist has more than two nodes, it triggers an update by replicating data to the next two nodes. If the ringList has more than two nodes, this server stores replicas for its two predecessor nodes. If there are additional replicas, it attempts to delete them from the local store.
-     * <p>
-     * If there are only two nodes left in the ringList, the server removes all unnecessary replicas from the local store.
+     * Manages key range and replication based on the current server's metadata.
      */
-
     public void fetchKeyRangesFromMetaData() {
-        if (! ringList.isEmpty()) {
+        if (!ringList.isEmpty()) {
             RingList.Node server = ringList.findByIPandPort(address, Integer.toString(port));
             // boolean to check if we have a new predecessor -> this is important for the data transfer in the following code!
             boolean hasStartRangeChanged = false;
             if (server != null) {
                 if (this.startRange != null) {
-                    hasStartRangeChanged = ! this.startRange.equals(server.getStartRange());
+                    hasStartRangeChanged = !this.startRange.equals(server.getStartRange());
                 }
                 this.startRange = server.getStartRange();
                 this.endRange = server.getEndRange();
@@ -171,13 +186,12 @@ public class KVServer {
                 List<String> toBeRemovedKeys = new LinkedList<>();
 
                 for (String key : replicaStores.keySet()) {
-                    if (! key.equals(replica1IPPortString) && ! key.equals(replica2IPPortString)) {
+                    if (!key.equals(replica1IPPortString) && !key.equals(replica2IPPortString)) {
                         KVStore toBeDeleted = replicaStores.get(key);
                         if (toBeDeleted.deleteAllData()) {
                             System.out.println("Data of replica " + key + " was deleted from this server");
                             toBeRemovedKeys.add(key);
-                        }
-                        else {
+                        } else {
                             System.out.println(new Date().getTime() + " ERROR: Data of replica " + key + " couldn't be deleted from this server");
                         }
                     }
@@ -186,8 +200,7 @@ public class KVServer {
                 for (String key : toBeRemovedKeys) {
                     replicaStores.remove(key);
                 }
-            }
-            else if (! isReplicated && server != null && replicaStores.size() > 0) {
+            } else if (!isReplicated && server != null && replicaStores.size() > 0) {
                 System.out.println("We are not replicating our data anymore, because there are only 2 servers left");
 
                 List<String> toBeRemovedKeys = deleteAllReplicaStores();
@@ -199,7 +212,8 @@ public class KVServer {
     }
 
     /**
-     * Attempts to delete all data from each replica store and returns the keys of the replica stores whose data was deleted successfully.
+     * Attempts to delete all data from each replica store and returns the keys of the replica stores
+     * whose data was deleted successfully.
      *
      * @return A list of keys of the replica stores whose data was successfully deleted.
      */
@@ -210,33 +224,30 @@ public class KVServer {
             if (toBeDeleted.deleteAllData()) {
                 System.out.println("Data of replica " + key + " was deleted from this server");
                 toBeRemovedKeys.add(key);
-            }
-            else {
+            } else {
                 System.out.println(new Date().getTime() + " ERROR: Data of replica " + key + " couldn't be deleted from this server");
             }
         }
         return toBeRemovedKeys;
     }
 
-    public ECSConnection getEcsConnection(){
+    public ECSConnection getEcsConnection() {
         return ecsConnection;
     }
-    /**
-     * Creates a replica store, associates it with a given replica node, and requests data for it.
-     * This process happens only if the replica isn't already stored.
-     *
-     * <p>This method creates a new KVStore for the given replica node if it isn't already stored.
-     * After this, it opens a socket to the replica node, sends a request to fetch the replica data,
-     * receives the data, and saves it in the newly created KVStore.
-     *
-     * @param replicaNode          the node to create the replica store for
-     * @param replicaIPPortString  the IP:Port string of the replica node
-     * @param replicaAlreadyStored a boolean indicating whether the replica is already stored
-     * @throws RuntimeException if any I/O error occurs when sending/receiving messages or when closing the socket
-     */
 
+    /**
+     * Creates a replica store for a given replica node, associates it with that node, and requests data for it.
+     * This process is executed only if the replica isn't already stored.
+     * After a new KVStore is created for the replica node, a socket connection is opened to the replica node,
+     * a request is sent to fetch its replica data, and upon receiving the data, it is saved in the newly created KVStore.
+     *
+     * @param replicaNode          The node for which the replica store is to be created.
+     * @param replicaIPPortString  The IP:Port string representation of the replica node.
+     * @param replicaAlreadyStored A boolean indicating whether this replica is already stored in the current server.
+     * @throws RuntimeException if there's an I/O error when establishing a socket connection or sending/receiving messages.
+     */
     private void createReplicaStoreAndRequestData(RingList.Node replicaNode, String replicaIPPortString, boolean replicaAlreadyStored) {
-        if (! replicaAlreadyStored) {
+        if (!replicaAlreadyStored) {
             String filename = hashing.getMD5Hash(replicaIPPortString) + random.nextInt(0, 2147483640);
             KVStore replica2Store = new KVStore(store.getCache().getMaxSize(), store.getDisplacementStrategy(), store.getStorageLocation(), filename);
             replicaStores.put(replicaIPPortString, replica2Store);
@@ -295,7 +306,7 @@ public class KVServer {
     }
 
     /**
-     * Connects with the ECSServer
+     * Connects the current server with the ECSServer.
      */
     public void connectECSServer() {
         try {
@@ -314,13 +325,10 @@ public class KVServer {
     }
 
     /**
-     * Initiates the closing protocol for the current server node.
-     * Attempts to send all data to next node and notifies ECS.
-     * If the server is the only node in the ring list, it simply deletes all its data
-     *
-     * @throws RuntimeException if any I/O error occurs during the process
+     * Initiates the server shutdown protocol.
+     * This method ensures that the server's data is properly transferred to its successor
+     * before the server node is taken down.
      */
-
     public void closingProtocol() {
         RingList.Node node = ringList.findByIPandPort(address, String.valueOf(port));
         String ipPrev = node.getNext().getIP();
@@ -344,8 +352,7 @@ public class KVServer {
                         String substring = outPut.substring(i, endIndex);
                         messageHandler.send("save_data " + substring);
                     }
-                }
-                else {
+                } else {
                     messageHandler.send("save_data " + outPut);
                     System.out.println("sending: " + outPut);
                 }
@@ -361,7 +368,7 @@ public class KVServer {
     }
 
     /**
-     * Stops the server and tries to close the serversocket
+     * Stops the KVServer and closes all its connections.
      */
     public void stopServer() {
         isRunning = false;
@@ -378,9 +385,11 @@ public class KVServer {
         }
         log.info("Stopped server");
     }
-    public UsageMetrics getUsageMetrics(){
+
+    public UsageMetrics getUsageMetrics() {
         return usageMetrics;
     }
+
     public FrequencyTable getFrequencyTable() {
         return frequencyTable;
     }

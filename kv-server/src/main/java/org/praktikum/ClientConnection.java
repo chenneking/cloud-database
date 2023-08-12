@@ -24,6 +24,13 @@ public class ClientConnection implements Runnable {
     private final Socket clientSocket;
     private final static int OPERATION_COUNT_OFFLOAD_THRESHOLD = 4;
 
+    /**
+     * Constructs a new `ClientConnection` instance to handle client interactions.
+     *
+     * @param clientSocket The socket through which the client is connected.
+     * @param hashing      The `ConsistentHashing` instance used for key distribution and replication.
+     * @param kvServer     The main `KVServer` instance, providing access to server utilities, storage, and other functionalities.
+     */
     public ClientConnection(Socket clientSocket, ConsistentHashing hashing, KVServer kvServer) {
         this.storageUnit = kvServer.getStore();
         this.messageHandler = new MessageHandler(clientSocket);
@@ -33,9 +40,9 @@ public class ClientConnection implements Runnable {
         this.clientSocket = clientSocket;
     }
 
-
     /**
-     * Main method of the Thread. Sends a message to the client if connected successfully
+     * Main execution thread that communicates with the client.
+     * Sends a message to the client upon successful connection.
      */
     @Override
     public void run() {
@@ -45,8 +52,7 @@ public class ClientConnection implements Runnable {
             if (input != null) {
                 String clientRequest = new String(input, StandardCharsets.UTF_8);
                 executeRequest(clientRequest);
-            }
-            else {
+            } else {
                 //the input is null if the connected server disconnected
                 close();
             }
@@ -54,10 +60,10 @@ public class ClientConnection implements Runnable {
     }
 
     /**
-     * Executes the correct request given by the user by splitting the request into different tokens and executing the
-     * correct function
+     * Processes the client's request.
+     * Parses the request command and executes the corresponding operation.
      *
-     * @param clientRequest String as the client the input
+     * @param clientRequest The input command from the client.
      */
     private void executeRequest(String clientRequest) {
         String[] tokens = clientRequest.trim().split("\\s+");
@@ -80,7 +86,7 @@ public class ClientConnection implements Runnable {
                 }
                 put(tokens[1], builder.toString());
                 try {
-                    if(kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                    if (kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD) {
                         offloadKeys();
                     }
                 } catch (IOException e) {
@@ -94,7 +100,7 @@ public class ClientConnection implements Runnable {
                 }
                 get(tokens[1]);
                 try {
-                    if(kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                    if (kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD) {
                         offloadKeys();
                     }
                 } catch (IOException e) {
@@ -108,7 +114,7 @@ public class ClientConnection implements Runnable {
                 }
                 delete(tokens[1]);
                 try {
-                    if(kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD){
+                    if (kvServer.getUsageMetrics().getOperationsLast30s() >= OPERATION_COUNT_OFFLOAD_THRESHOLD) {
                         offloadKeys();
                     }
                 } catch (IOException e) {
@@ -180,7 +186,7 @@ public class ClientConnection implements Runnable {
                 }
             }
             case "get_frequency_table" -> {
-                messageHandler.send("\n"+kvServer.getFrequencyTable().toString());
+                messageHandler.send("\n" + kvServer.getFrequencyTable().toString());
             }
             case "get_usage_metrics_info" -> {
                 messageHandler.send(kvServer.getUsageMetrics().info());
@@ -196,24 +202,25 @@ public class ClientConnection implements Runnable {
             }
         }
     }
+
     /**
-     * Sends error message to the client
+     * Sends an error message to the client indicating an unknown command.
      */
     public void error() {
         messageHandler.send("error unknown command!");
     }
 
     /**
-     * sends data via the message handler
+     * Sends a message to the client.
      *
-     * @param data
+     * @param data The message to send.
      */
     public void send(String data) {
         messageHandler.send(data);
     }
 
     /**
-     * Closes message handler and client socket
+     * Closes the client connection and releases resources.
      */
     public void close() {
         isOpen = false;
@@ -227,12 +234,13 @@ public class ClientConnection implements Runnable {
     }
 
     /**
-     * Puts to
+     * Stores or updates a key-value pair in a replica's storage unit.
+     * This method is called by other servers to replicate data onto this server.
      *
-     * @param ip
-     * @param port
-     * @param key
-     * @param value
+     * @param ip    The IP address of the originating server (i.e., the primary server that received the client request).
+     * @param port  The port number of the originating server.
+     * @param key   The key associated with the value.
+     * @param value The value to be stored or updated.
      */
     private synchronized void serverPut(String ip, String port, String key, String value) {
         Map<String, KVStore> map = kvServer.getReplicaStores();
@@ -240,6 +248,14 @@ public class ClientConnection implements Runnable {
         kvStore.put(key, value);
     }
 
+    /**
+     * Deletes a key-value pair from a replica's storage unit.
+     * This method is called by other servers to replicate a delete operation onto this server.
+     *
+     * @param ip   The IP address of the originating server (i.e., the primary server that received the client request).
+     * @param port The port number of the originating server.
+     * @param key  The key to be deleted.
+     */
     private synchronized void serverDelete(String ip, String port, String key) {
         Map<String, KVStore> map = kvServer.getReplicaStores();
         KVStore kvStore = map.get(ip + ":" + port);
@@ -248,16 +264,12 @@ public class ClientConnection implements Runnable {
 
 
     /**
-     * Stores or updates a key-value pair in the server storage unit.
-     * <p>
-     * <p>
-     * If more than 2 Nodes are in the ringlist the put operation is replicated to the next two nodes in the ringlist.
+     * Stores or updates a key-value pair in the server's storage unit.
+     * If more than 2 nodes are in the ring list, the operation is replicated to the next two nodes.
      *
-     * @param key   The key associated with the value to be stored.
-     * @param value The data to be stored.
-     * @throws RuntimeException If an I/O error occurs when sending data to the next nodes.
+     * @param key   The key associated with the value.
+     * @param value The value to store.
      */
-
     private synchronized void put(String key, String value) {
         if (kvServer.isWriteLock()) {
             KVServer.log.info("Server is write-locked");
@@ -319,6 +331,12 @@ public class ClientConnection implements Runnable {
         }
 
     }
+
+    /**
+     * Offloads the most frequently used keys to reduce load on the server.
+     *
+     * @throws IOException If there's an error during offloading.
+     */
     private synchronized void offloadKeys() throws IOException {
         RingList.Node node = kvServer.getRingList().findByIPandPort(kvServer.getAddress(), Integer.toString(kvServer.getPort()));
         RingList.Node nodeNext = node.getNext();
@@ -341,12 +359,12 @@ public class ClientConnection implements Runnable {
 
 
         //if the load of the current Server is smaller than the load of the other 2 servers you do nothing
-        if(kvServer.getUsageMetrics().getOperationsLast30s() < nextLoad && kvServer.getUsageMetrics().getOperationsLast30s() < prevLoad){
+        if (kvServer.getUsageMetrics().getOperationsLast30s() < nextLoad && kvServer.getUsageMetrics().getOperationsLast30s() < prevLoad) {
             return;
         }
         //if the load of the next server is smaller than the load of prev you offload your keys to the next server
-        if(nextLoad < prevLoad){
-            String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(false);
+        if (nextLoad < prevLoad) {
+            String[] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(false);
             String data = kvServer.getStore().getDataBetweenKeyRanges(keyRange[0], keyRange[1]);
             messageHandlerNext.send("set_write_lock");
             kvServer.setWriteLock(true);
@@ -354,9 +372,8 @@ public class ClientConnection implements Runnable {
             messageHandlerNext.send("remove_write_lock");
             kvServer.setWriteLock(false);
             changeKeyRangeRequest(kvServer.getStartRange(), keyRange[0]);
-        }
-        else{
-            String [] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(true);
+        } else {
+            String[] keyRange = kvServer.getFrequencyTable().calculateOffloadKeyRange(true);
             String data = kvServer.getStore().getDataBetweenKeyRanges(keyRange[0], keyRange[1]);
             messageHandlerPrev.send("set_write_lock");
             kvServer.setWriteLock(true);
@@ -371,14 +388,21 @@ public class ClientConnection implements Runnable {
         socketPrev.close();
         kvServer.getUsageMetrics().resetCount();
     }
-    private synchronized void changeKeyRangeRequest(String startRange, String endRang){
-        kvServer.getEcsConnection().send("update_keyrange "+ startRange + " " + endRang);
+
+    /**
+     * Requests a change in the key range of the server.
+     *
+     * @param startRange The new start range.
+     * @param endRange   The new end range.
+     */
+    private synchronized void changeKeyRangeRequest(String startRange, String endRange) {
+        kvServer.getEcsConnection().send("update_keyrange " + startRange + " " + endRange);
     }
 
     /**
-     * Calls the get method from the kvStore and sends the according message to the Client
+     * Retrieves a value associated with a key from the server's storage unit and sends it to the client.
      *
-     * @param key String <key>
+     * @param key The key to retrieve.
      */
     private synchronized void get(String key) {
         if (kvServer.isStopped()) {
@@ -396,16 +420,14 @@ public class ClientConnection implements Runnable {
         String value;
         if (bucketIPAndPort.equals(kvServer.getAddress() + ":" + kvServer.getPort())) {
             value = storageUnit.get(key);
-        }
-        else {
+        } else {
             value = kvServer.getReplicaStores().get(bucketIPAndPort).get(key);
         }
 
         if (value == null) {
             KVServer.log.info("Error during GET: " + key);
             messageHandler.send("get_error " + key);
-        }
-        else {
+        } else {
             kvServer.getUsageMetrics().addOperation();
             //kvServer.getFrequencyTable().addToTable(key, hashing.getMD5Hash(key));
             KVServer.log.info("Successful GET: " + key + ":" + value);
@@ -415,9 +437,9 @@ public class ClientConnection implements Runnable {
     }
 
     /**
-     * Calls the delete method from the kvStore and sends the according message to the Client
+     * Deletes a key-value pair from the server's storage unit and informs the client.
      *
-     * @param key String <key>
+     * @param key The key to delete.
      */
     private synchronized void delete(String key) {
         if (kvServer.isWriteLock()) {
@@ -432,7 +454,7 @@ public class ClientConnection implements Runnable {
         }
         String hash = hashing.getMD5Hash(key);
         boolean isRightServer = checkIfRightServer(hash);
-        if (! isRightServer) {
+        if (!isRightServer) {
             messageHandler.send("server_not_responsible");
             return;
         }
@@ -442,8 +464,7 @@ public class ClientConnection implements Runnable {
             messageHandler.send("delete_success " + key + " " + value);
             kvServer.getUsageMetrics().addOperation();
             kvServer.getFrequencyTable().deleteFromTable(key, hashing.getMD5Hash(key));
-        }
-        else {
+        } else {
             KVServer.log.info("Error during DELETE: " + key);
             messageHandler.send("delete_error " + key);
         }
@@ -468,54 +489,50 @@ public class ClientConnection implements Runnable {
     }
 
     /**
-     * Sends key range via the message handler.
+     * Sends the server's key range to the client.
      */
     private synchronized void sendKeyRange() {
         messageHandler.send("keyrange_success " + kvServer.getRingList());
     }
 
     /**
-     * Sends key range read via the message handler.
+     * Sends the read key range to the client.
      */
     private synchronized void sendKeyRangeRead() {
         messageHandler.send("keyrange_read_success " + kvServer.getRingList().getKeyRangeRead());
     }
 
     /**
-     * Checks if it's the right server for the given hash
+     * Checks if the current server is responsible for a given hash.
      *
-     * @param hash
-     * @return returns true if has is in the range of the current server.
+     * @param hash The hash of a key.
+     * @return true if the server is responsible, false otherwise.
      */
     private boolean checkIfRightServer(String hash) {
         if (kvServer.getStartRange().compareTo(hash) < 0 && kvServer.getEndRange().compareTo(hash) >= 0) {
             return true;
-        }
-        else if (kvServer.getStartRange().compareTo(kvServer.getEndRange()) >= 0) {
+        } else if (kvServer.getStartRange().compareTo(kvServer.getEndRange()) >= 0) {
             if (kvServer.getStartRange().compareTo(hash) < 0 && kvServer.getEndRange().compareTo(hash) <= 0) {
                 return true;
-            }
-            else return kvServer.getStartRange().compareTo(hash) > 0 && kvServer.getEndRange().compareTo(hash) >= 0;
+            } else return kvServer.getStartRange().compareTo(hash) > 0 && kvServer.getEndRange().compareTo(hash) >= 0;
         }
         return false;
     }
 
     /**
-     * Checks if the current server is the right server in replication or not for the providend hash key
+     * Determines the correct server responsible for the provided hash key during replication.
      *
-     * @param hash
-     * @return Correct servers IP and Port
+     * @param hash The hash key to check.
+     * @return The IP and port of the correct server.
      */
     private String checkIfRightServerGet(String hash) {
         String serverIPAndPort = kvServer.getAddress() + ":" + kvServer.getPort();
         if (kvServer.getStartRange().compareTo(hash) < 0 && kvServer.getEndRange().compareTo(hash) >= 0) {
             return serverIPAndPort;
-        }
-        else if (kvServer.getStartRange().compareTo(kvServer.getEndRange()) >= 0) {
+        } else if (kvServer.getStartRange().compareTo(kvServer.getEndRange()) >= 0) {
             if (kvServer.getStartRange().compareTo(hash) < 0 && kvServer.getEndRange().compareTo(hash) <= 0) {
                 return serverIPAndPort;
-            }
-            else if (kvServer.getStartRange().compareTo(hash) > 0 && kvServer.getEndRange().compareTo(hash) >= 0) {
+            } else if (kvServer.getStartRange().compareTo(hash) > 0 && kvServer.getEndRange().compareTo(hash) >= 0) {
                 return serverIPAndPort;
             }
         }
@@ -527,12 +544,10 @@ public class ClientConnection implements Runnable {
                 String replicaIPAndPort = node.getIP() + ":" + node.getPort();
                 if (node.getStartRange().compareTo(hash) < 0 && node.getEndRange().compareTo(hash) >= 0) {
                     return replicaIPAndPort;
-                }
-                else if (node.getStartRange().compareTo(node.getEndRange()) >= 0) {
+                } else if (node.getStartRange().compareTo(node.getEndRange()) >= 0) {
                     if (node.getStartRange().compareTo(hash) < 0 && node.getEndRange().compareTo(hash) <= 0) {
                         return replicaIPAndPort;
-                    }
-                    else if (node.getStartRange().compareTo(hash) > 0 && node.getEndRange().compareTo(hash) >= 0) {
+                    } else if (node.getStartRange().compareTo(hash) > 0 && node.getEndRange().compareTo(hash) >= 0) {
                         return replicaIPAndPort;
                     }
                 }

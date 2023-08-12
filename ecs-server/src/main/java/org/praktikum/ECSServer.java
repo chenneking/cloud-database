@@ -23,6 +23,14 @@ public class ECSServer {
 
     public final HashMap<String, ECSCommunication> ecsCommunicationHashMap = new HashMap<>();
 
+    /**
+     * Constructor for ECSServer.
+     *
+     * @param port        The port on which the ECSServer will run.
+     * @param address     The address of the ECSServer.
+     * @param logFilePath The path where logs will be stored.
+     * @param logLevel    The level of logging.
+     */
     public ECSServer(int port, String address, String logFilePath, Level logLevel) {
         this.port = port;
         this.isRunning = false;
@@ -40,8 +48,7 @@ public class ECSServer {
     }
 
     /**
-     * Starts the server, executes a while loop which accepts any connecting Clients and starts a separate Thread which
-     * is supposed to handle the connection to the client.
+     * Starts the ECSServer and listens for incoming server connections.
      */
     public void runServer() {
         try {
@@ -67,13 +74,12 @@ public class ECSServer {
      * The method returns an `AbstractMap.SimpleEntry` object, where the key is the ECSCommunication object corresponding
      * to the successor, and the value is the start range of the hash space that the successor is responsible for.
      *
-     * @param ip   The IP address of the server to be added.
-     * @param port The port number of the server to be added.
+     * @param ip         The IP address of the server to be added.
+     * @param port       The port number of the server to be added.
      * @param hashString A custom endRange provided in the startup of the KVServer
      * @return An `AbstractMap.SimpleEntry` where the key is the ECSCommunication of the successor,
      * and the value is the hash range start value that the successor is responsible for.
      */
-
     public AbstractMap.SimpleEntry<ECSCommunication, String> addEscCommunication(String ip, String port, String hashString) {
         RingList.Node node = ringList.add(ip, port, hashString).getNext();
         String keyRange = node.getStartRange();
@@ -81,11 +87,11 @@ public class ECSServer {
     }
 
     /**
-     * removes a Node form the Ringlist and sets the succeser to the next node
+     * Removes a server from the hash ring and determines the next server.
      *
-     * @param ip   of the to be removed node
-     * @param port of the to be removed node
-     * @return ECSCommunication
+     * @param ip   The IP of the server to be removed.
+     * @param port The port of the server to be removed.
+     * @return The ECSCommunication of the successor.
      */
     public ECSCommunication removeFromRing(String ip, String port) {
         RingList.Node node = ringList.remove(ip, port);
@@ -98,7 +104,7 @@ public class ECSServer {
     }
 
     /**
-     * gets all meta data and converts them to a string
+     * Gets all meta data and converts them to a string
      *
      * @return String of meta data
      */
@@ -107,7 +113,7 @@ public class ECSServer {
     }
 
     /**
-     * sends Metadata to all servers
+     * Sends Metadata to all servers
      */
     public void sendMetaDataToAll() {
         for (ECSCommunication kvServers : ecsCommunicationHashMap.values()) {
@@ -146,8 +152,9 @@ public class ECSServer {
         return ecsCommunicationHashMap.get(successor.getIP().concat(successor.getPort()));
     }
 
+
     /**
-     * Stops the server and tries to close the serversocket
+     * Shuts down the ECSServer and closes the server socket.
      */
     private void stopServer() {
         isRunning = false;
@@ -161,8 +168,9 @@ public class ECSServer {
             log.warning("Error while closing ECS socket");
         }
     }
+
     public static void main(String[] args) {
-        ECSServer ecsServer = new ECSServer(44331, "0.0.0.0", "123",Level.ALL);
+        ECSServer ecsServer = new ECSServer(44331, "0.0.0.0", "123", Level.ALL);
         ecsServer.runServer();
     }
 }

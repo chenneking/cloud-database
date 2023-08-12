@@ -8,9 +8,16 @@ public class ConsistentHashing {
 
     private MessageDigest digest;
 
+    /**
+     * Constructor for the ConsistentHashing class.
+     * Initializes the MessageDigest with the MD5 hashing algorithm.
+     *
+     * @throws NoSuchAlgorithmException If the MD5 hashing algorithm is not available in the environment.
+     */
     public ConsistentHashing() throws NoSuchAlgorithmException {
         this.digest = MessageDigest.getInstance("MD5");
     }
+
     /**
      * Computes the MD5 hash of the given key.
      *
@@ -20,6 +27,6 @@ public class ConsistentHashing {
     public String getMD5Hash(String key) {
         byte[] hash = this.digest.digest(key.getBytes());
         BigInteger bigInteger = new BigInteger(1, hash);
-        return String.format("%032X",bigInteger);
+        return String.format("%032X", bigInteger);
     }
 }

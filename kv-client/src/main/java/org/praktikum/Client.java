@@ -38,6 +38,12 @@ public class Client implements SignalHandler {
     private int retryCount = 0;
     private static final Random random = new Random(24058300);
 
+
+    /**
+     * Initializes the client and its necessary components including consistent hashing and ring list.
+     * Additionally, adds a shutdown hook to ensure the client disconnects gracefully upon termination.
+     * It also registers a signal handler for the TERM signal.
+     */
     public Client() {
         try {
             hashing = new ConsistentHashing();
@@ -52,7 +58,8 @@ public class Client implements SignalHandler {
     }
 
     /**
-     *  Provides a run loop to continuously re-prompt for input after a command has been executed
+     * Main execution loop of the client. Continuously prompts the user for input commands
+     * and executes them until the client is terminated.
      */
     private void run() {
         while (EXECUTE) {
@@ -68,8 +75,9 @@ public class Client implements SignalHandler {
     }
 
     /**
-     * Provides the input validation and delegation of tasks for the different commands
-     * @param tokens A string array of command tokens
+     * Validates and delegates user input commands for execution.
+     *
+     * @param tokens Array of string tokens that represent a user command and its arguments.
      */
     private void executeCommand(String[] tokens) {
         if (tokens.length == 0) {
@@ -98,7 +106,7 @@ public class Client implements SignalHandler {
                     error();
                     break;
                 }
-                if (! isConnected) {
+                if (!isConnected) {
                     print("There is no active connection to be closed.");
                     break;
                 }
@@ -106,7 +114,7 @@ public class Client implements SignalHandler {
                 print("Disconnected from server.");
             }
             case "send" -> {
-                if (! isConnected) {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -120,7 +128,7 @@ public class Client implements SignalHandler {
                 handleServerResponse(tokens);
             }
             case "put" -> {
-                if (! isConnected) {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -134,7 +142,7 @@ public class Client implements SignalHandler {
                 handleServerResponse(tokens);
             }
             case "get" -> {
-                if (! isConnected) {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -148,7 +156,7 @@ public class Client implements SignalHandler {
                 handleServerResponse(tokens);
             }
             case "delete" -> {
-                if (! isConnected) {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -162,7 +170,7 @@ public class Client implements SignalHandler {
 
             }
             case "keyrange" -> {
-                if (! isConnected) {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -171,7 +179,7 @@ public class Client implements SignalHandler {
                 handleServerResponse(tokens);
             }
             case "keyrange_read" -> {
-                if (! isConnected) {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -189,8 +197,7 @@ public class Client implements SignalHandler {
                     log.setLevel(newLevel);
                     if (logLevel == null) {
                         print("loglevel set from none to " + newLevel.getName());
-                    }
-                    else {
+                    } else {
                         print("loglevel set from" + logLevel.getName() + " to " + newLevel.getName());
                     }
                     logLevel = newLevel;
@@ -202,13 +209,13 @@ public class Client implements SignalHandler {
             case "quit" -> {
                 print("The client application will shutdown now.");
                 boolean connectionClosed = closeConnection();
-                if (! connectionClosed) {
+                if (!connectionClosed) {
                     break;
                 }
                 EXECUTE = false;
             }
-            case "get_frequency_table" ->{
-                if (! isConnected) {
+            case "get_frequency_table" -> {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -216,8 +223,8 @@ public class Client implements SignalHandler {
                 handleServerResponse(tokens);
 
             }
-            case "get_usage_metrics" ->{
-                if (! isConnected) {
+            case "get_usage_metrics" -> {
+                if (!isConnected) {
                     print("You aren't connected to a server yet! Please connect to a server using the connect command first.");
                     break;
                 }
@@ -233,8 +240,9 @@ public class Client implements SignalHandler {
     }
 
     /**
-     * Updates the client connection if not connected to the right server for the given key
-     * @param key simple string
+     * Updates the client connection if not connected to the appropriate server for a given key.
+     *
+     * @param key The key to determine the appropriate server.
      */
     private void updateClientConnectionIfRequired(String key) {
         // Don't update the connection if the client has no Metadata in store.
@@ -245,15 +253,17 @@ public class Client implements SignalHandler {
         String keyHash = hashing.getMD5Hash(key);
         RingList.Node node = ringList.findByHashKey(keyHash);
 
-        if (node != null && (! client.getInetAddress().getHostAddress().equals(node.getIP()) || ! Integer.toString(client.getPort()).equals(node.getPort()))) {
+        if (node != null && (!client.getInetAddress().getHostAddress().equals(node.getIP()) || !Integer.toString(client.getPort()).equals(node.getPort()))) {
             int port = Integer.parseInt(node.getPort());
             closeConnection();
-            connect(node.getIP(),port);
+            connect(node.getIP(), port);
         }
     }
+
     /**
-     * Updates the client connection if not connected to the right server also handles the replica logic for the given key
-     * @param key simple string
+     * Updates the client connection based on the provided key and handles the replica logic.
+     *
+     * @param key The key to determine the appropriate server and replica logic.
      */
     private void updateClientConnectionIfRequiredGet(String key) {
         //handle case where metadata isn't available to client i.e it's empty
@@ -265,7 +275,7 @@ public class Client implements SignalHandler {
 
         // RingList.Node random_replica = ringList.getRandomNodeFromKey(keyHash);
         RingList.Node node = ringList.findByHashKey(keyHash);
-        if (ringList.getFromReplica(client.getInetAddress().getHostAddress(),Integer.toString(client.getPort()),keyHash)) {
+        if (ringList.getFromReplica(client.getInetAddress().getHostAddress(), Integer.toString(client.getPort()), keyHash)) {
             int port = Integer.parseInt(node.getPort());
             closeConnection();
             connect(node.getIP(), port);
@@ -273,17 +283,19 @@ public class Client implements SignalHandler {
     }
 
     /**
-     * Prints the answer from the server
+     * Retrieves and prints the server's response.
      */
-    private void printServerAnswer(){
+    private void printServerAnswer() {
         byte[] received = receive();
         if (received != null) {
             String receivedString = new String(received);
             System.out.print(PROMPT + receivedString);
         }
     }
+
     /**
      * Sends a String of data to the connected server
+     *
      * @param data String of data
      */
     private void sendString(String data) {
@@ -291,10 +303,12 @@ public class Client implements SignalHandler {
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
         send(bytes);
     }
+
     /**
-     * Establishes a Socket connection to a server
-     * @param host hostname of server
-     * @param port port number
+     * Establishes a connection to a server using the provided host and port.
+     *
+     * @param host The hostname or IP address of the server.
+     * @param port The port number of the server.
      */
     private void connect(String host, int port) {
         try {
@@ -316,24 +330,31 @@ public class Client implements SignalHandler {
             log.warning("Error while trying to connect to " + client.getInetAddress().getHostName() + ":" + client.getPort());
         }
     }
+
     //client put,get and delete wrapper for benchmarking
-    public void putPublic(String key, String value){
+    public void putPublic(String key, String value) {
         executeCommand(new String[]{"put", key, value});
     }
-    public void getPublic(String key){
+
+    //Todo die raus oder
+    public void getPublic(String key) {
         executeCommand(new String[]{"get", key});
     }
-    public void deletePublic(String key, String value){
+
+    public void deletePublic(String key, String value) {
         executeCommand(new String[]{"delete", key, value});
     }
-    public void connectPublic(String address, int port){
-        executeCommand(new String[]{"connect",address,Integer.toString(port)});
+
+    public void connectPublic(String address, int port) {
+        executeCommand(new String[]{"connect", address, Integer.toString(port)});
 
     }
+
     /**
-     * Handles responses received from the server after a command execution.
+     * Handles the server's response after a command execution. This includes handling
+     * scenarios like server redirection, server not responsible, and more.
      *
-     * @param tokens the tokens of the issued command
+     * @param tokens Tokens of the executed command.
      */
     private void handleServerResponse(String[] tokens) {
         byte[] received = receive();
@@ -346,16 +367,14 @@ public class Client implements SignalHandler {
                     throw new RuntimeException(e);
                 }
                 executeCommand(tokens);
-            }
-            else if (receivedString.startsWith("server_not_responsible")) {
+            } else if (receivedString.startsWith("server_not_responsible")) {
                 //System.out.print(PROMPT + receivedString);
                 requestKeyRange();
                 handleKeyRangeResponse();
                 executeCommand(tokens);
             } else if (receivedString.startsWith("server_write_lock")) {
                 print("The server is currently write locked. Please try again later.");
-            }
-            else if (receivedString.startsWith("keyrange_success")) {
+            } else if (receivedString.startsWith("keyrange_success")) {
                 String[] keyRangeData = receivedString.split("keyrange_success ");
                 if (keyRangeData[1] != null) {
                     ringList.parseAndUpdateMetaData(keyRangeData[1]);
@@ -364,34 +383,28 @@ public class Client implements SignalHandler {
                 }
                 System.out.print(PROMPT + receivedString);
                 this.retryCount = 0;
-            }
-            else {
+            } else {
                 System.out.print(PROMPT + receivedString);
                 this.retryCount = 0;
             }
         }
     }
-    /**
-     * Calculates the exponential backoff time with jitter.
-     *
-     * @return The backoff time with jitter in milliseconds
-     */
 
+    /**
+     * Computes the exponential backoff time with jitter to handle retries.
+     *
+     * @return The backoff time in milliseconds.
+     */
     private long getBackoff() {
         int backoff = (int) Math.pow(2, retryCount++);
         int jitter = random.nextInt((int) Math.ceil(backoff >> 1));
         return backoff + jitter;
     }
 
-    /**
-     * Handles the server's response to a key range request.
-     *
-     * Receives the server's response and prints it. If the response
-     * contains 'keyrange_success', it parses the received key range data
-     * and updates the ringList accordingly. If there's an error while
-     * parsing, logs a warning message.
-     */
 
+    /**
+     * Handles the server's response to a key range request by updating the client's knowledge of the ring list.
+     */
     private void handleKeyRangeResponse() {
         byte[] received = receive();
         if (received != null) {
@@ -407,8 +420,9 @@ public class Client implements SignalHandler {
     }
 
     /**
-     * Retrieves a set of bytes sent by the connected server
-     * @return A byte arroy of ASCII characters
+     * Retrieves data sent by the server.
+     *
+     * @return A byte array containing the received data, or null if there's no data or a connection issue.
      */
     private byte[] receive() {
         if (!isConnected) {
@@ -419,7 +433,7 @@ public class Client implements SignalHandler {
             int i = 1;
             byte[] bytes = new byte[128000];
             bytes[0] = prev;
-            while(true) {
+            while (true) {
                 byte curr = (byte) in.read();
                 bytes[i++] = curr;
                 //condition to break out of loop when we've reached the end of a message
@@ -436,8 +450,10 @@ public class Client implements SignalHandler {
         }
         return null;
     }
+
     /**
      * Sends data to the connected server
+     *
      * @param data A byte array of data
      */
     private void send(byte[] data) {
@@ -449,8 +465,10 @@ public class Client implements SignalHandler {
             print("An error occurred while sending data from the server.");
         }
     }
+
     /**
      * Closes down the established socket connection
+     *
      * @return boolean value if operation was successful
      */
     private boolean closeConnection() {
@@ -462,36 +480,43 @@ public class Client implements SignalHandler {
                 client.close();
                 isConnected = false;
                 log.info("Disconnected from server " + client.getInetAddress().getHostName() + ":" + client.getPort());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 print("An error occurred while the closing the connection! Please try again.");
                 log.warning("Error while trying to disconnect from " + client.getInetAddress().getHostName() + ":" + client.getPort());
-                isConnected =false;
+                isConnected = false;
                 return false;
             }
         }
         return true;
     }
+
     /**
      * Sends a put request for a <key><value> pair
-     * @param key String <key>
+     *
+     * @param key   String <key>
      * @param value String <value>
      */
-    private void put(String key, String value){
-        sendString("put "+key+" "+value);
+    private void put(String key, String value) {
+        sendString("put " + key + " " + value);
     }
+
     /**
      * Sends a get request for a <key>
+     *
      * @param key String <key>
      */
-    private void get(String key){
-        sendString("get "+key);
+    private void get(String key) {
+        sendString("get " + key);
     }
+
     /**
      * Sends a delete request for a <key>
+     *
      * @param key String <key>
      */
-    private void delete(String key){sendString("delete "+key);}
+    private void delete(String key) {
+        sendString("delete " + key);
+    }
 
     /**
      * Sends the keyrange request
@@ -499,6 +524,7 @@ public class Client implements SignalHandler {
     public void requestKeyRange() {
         sendString("keyrange");
     }
+
     /**
      * Sends the keyrange_read request
      */
@@ -507,7 +533,7 @@ public class Client implements SignalHandler {
     }
 
     /**
-     * Prints help text providing information on every command and its usage
+     * Prints out a formatted help text to the user, explaining the usage of each available command.
      */
     public static void printHelpText() {
         System.out.println(PROMPT + "List of Commands:");
@@ -526,13 +552,13 @@ public class Client implements SignalHandler {
                 null
         );
         printHelpCommand(
-                "send","Send a message to the remote echo server",
+                "send", "Send a message to the remote echo server",
                 "send <message>",
                 "send Hello World!",
                 "message - The message sent to the server"
         );
         printHelpCommand(
-                "logLevel","Adjusts the current log level of the logger",
+                "logLevel", "Adjusts the current log level of the logger",
                 "logLevel <level>",
                 "logLevel INFO",
                 "level - Loglevel (ALL/CONFIG/FINE/FINEST/INFO/OFF/SEVERE/WARNING)"
@@ -550,6 +576,7 @@ public class Client implements SignalHandler {
                 null
         );
     }
+
     private static void printHelpCommand(String command, String description, String usage, String example, String... parameters) {
         System.out.format("\n%-12s%s", command, description);
         if (usage != null) {
@@ -562,23 +589,26 @@ public class Client implements SignalHandler {
 
 
     /**
-     * Prints error message for invalid command usage
+     * Utility method to print an error message when an invalid command is entered.
      */
     public static void error() {
         print("Invalid Input! Please refer to help to find information on the proper command usage.");
     }
+
     @Override
     public void handle(Signal sig) {
         closeConnection();
     }
 
     /**
-     * Wrapper to provide formatted print with the defined prompt at the beginning of every line
-     * @param output String to be printed
+     * Prints the provided output with the client's prompt.
+     *
+     * @param output The string to be printed.
      */
     public static void print(String output) {
         System.out.println(PROMPT + output);
     }
+
     public static void main(String[] args) {
         try {
             log.setUseParentHandlers(false);
@@ -587,11 +617,11 @@ public class Client implements SignalHandler {
 
             // Create the logs directory if it doesn't exist yet.
             Path path = Paths.get(logFilePath);
-            if (! Files.exists(path.getParent())) {
+            if (!Files.exists(path.getParent())) {
                 Files.createDirectories(path.getParent());
             }
 
-            FileHandler fileHandler = new FileHandler(logFilePath,true);
+            FileHandler fileHandler = new FileHandler(logFilePath, true);
             fileHandler.setFormatter(new SimpleFormatter());
             log.addHandler(fileHandler);
         } catch (IOException e) {

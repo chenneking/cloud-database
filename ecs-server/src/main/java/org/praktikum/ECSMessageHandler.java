@@ -9,7 +9,13 @@ public class ECSMessageHandler {
     private InputStream in;
     private OutputStream out;
 
-
+    /**
+     * Constructor for ECSMessageHandler.
+     * <p>
+     * Initializes the input and output streams associated with the provided socket connection.
+     *
+     * @param ECSConnection The socket connection with the client.
+     */
     public ECSMessageHandler(Socket ECSConnection) {
         try {
             in = ECSConnection.getInputStream();
@@ -20,9 +26,13 @@ public class ECSMessageHandler {
     }
 
     /**
-     * Retrieves a set of bytes sent by the connected client
+     * Receives a message from the connected client.
+     * <p>
+     * Reads the incoming message byte by byte and returns it as a byte array.
+     * The method looks for the CRLF sequence (i.e., \r\n) to determine the end of the message.
+     * If the end of the stream is reached or the socket is closed, the method closes the connection and returns null.
      *
-     * @return A byte array of ASCII characters
+     * @return A byte array representing the received message or null if an error occurs.
      */
     public byte[] receive() {
         try {
@@ -37,7 +47,7 @@ public class ECSMessageHandler {
                 if (prev == (byte) 13 && curr == (byte) 10) {
                     break;
                 }
-                if (curr == - 1 || curr == - 3) {
+                if (curr == -1 || curr == -3) {
                     close();
                     return null;
                 }
@@ -51,9 +61,11 @@ public class ECSMessageHandler {
     }
 
     /**
-     * Sends data to the connected client
+     * Sends a message to the connected client.
+     * <p>
+     * The message is prefixed with "ECS " and suffixed with CRLF (i.e., "\r\n") before sending.
      *
-     * @param data String with the needed data
+     * @param data The message to be sent.
      */
     public void send(String data) {
         try {
@@ -66,12 +78,11 @@ public class ECSMessageHandler {
     }
 
     /**
-     * Returns the number of bytes that can be read (or skipped over) from the input stream without blocking.
+     * Determines the number of bytes available to be read from the input stream.
      *
-     * @return An estimate of the number of bytes that can be read (or skipped over) from the input stream without blocking.
-     * @throws RuntimeException if an I/O error occurs when calling the available method of the input stream.
+     * @return The number of bytes available to be read.
+     * @throws RuntimeException if there's an I/O error while determining available bytes.
      */
-
     public int size() {
         try {
             return in.available();
@@ -81,7 +92,9 @@ public class ECSMessageHandler {
     }
 
     /**
-     * tries to close in the in and output stream and catches potential exceptions
+     * Closes the input and output streams.
+     * <p>
+     * This method tries to close both streams and logs any exceptions that may occur during the process.
      */
     public void close() {
         try {

@@ -17,6 +17,12 @@ public abstract class Cache {
     protected int maxSize;
     protected PersistentStorage persistentStorage;
 
+    /**
+     * Constructs a new Cache instance with a specified maximum size and persistent storage.
+     *
+     * @param maxSize The maximum size for the cache.
+     * @param storage The persistent storage mechanism to interact with.
+     */
     public Cache(int maxSize, PersistentStorage storage) {
         this.hashMap = new HashMap<>();
         this.maxSize = maxSize;
@@ -28,23 +34,21 @@ public abstract class Cache {
     public abstract PutResult put(String key, String value);
 
     /**
-     * Deletes the value associated to the key in Cache and or in persistent storage
+     * Deletes the value associated with the provided key in the cache and/or persistent storage.
      *
-     * @param key associated with the value that is to be deleted
-     * @return KVPair<String, String> representing the deleted key-value pair,
-     * *         or null if the key was not found in either the cache or persistent storage.
+     * @param key The key associated with the value to delete.
+     * @return A key-value pair representing the deleted entry, or null if the key was not found.
      */
     public KVPair<String, String> delete(String key) {
         String cacheValue = hashMap.remove(key);
         KVPair<String, String> persistentValue = persistentStorage.delete(key);
         if (cacheValue != null) {
             return new KVPair<>(key, cacheValue);
-        }
-        else return persistentValue;
+        } else return persistentValue;
     }
 
     /**
-     * Flushes the Cache by putting all the KVPairs to the persistent storage
+     * Flushes the cache, storing all key-value pairs into the persistent storage.
      */
     public void flushCache() {
         if (hashMap.size() == 0) {

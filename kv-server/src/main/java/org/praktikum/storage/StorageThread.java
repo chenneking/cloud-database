@@ -18,6 +18,15 @@ public class StorageThread implements Runnable {
     private final StringBuilder outPut = new StringBuilder();
     private String completeData = null;
 
+    /**
+     * Constructs a new StorageThread instance.
+     *
+     * @param command         The storage operation command: "get", "put", "delete", etc.
+     * @param key             The key to be operated on.
+     * @param value           The value associated with the key (only for put operations).
+     * @param storageLocation The directory location of the storage file.
+     * @param FILENAME        The name of the storage file.
+     */
     public StorageThread(String command, String key, String value, String storageLocation, String FILENAME) {
         this.command = command;
         this.key = key;
@@ -32,11 +41,9 @@ public class StorageThread implements Runnable {
     }
 
     /**
-     * Writes the contents of `outPut` into a file in the specified storage location.
-     * <p>
-     * Creates a new file or overwrites an existing file at the given storage location with the specified filename. The content of `outPut` is written into the file.
+     * Writes the contents of `outPut` into the storage file.
      *
-     * @throws IOException If an I/O error occurs while writing to the file.
+     * @throws IOException If there's an error writing to the file.
      */
     private void writeFile() {
         try {
@@ -49,11 +56,10 @@ public class StorageThread implements Runnable {
     }
 
     /**
-     * Retrieves the value associated with the given key from a file stored in the specified storage location.
+     * Retrieves the value associated with the given key from the storage.
      *
-     * @throws FileNotFoundException If the file is not found at the specified storage location.
-     * @throws IOException           If an I/O error occurs while reading from the file.
-     * @throws RuntimeException      If an IOException is caught.
+     * @throws FileNotFoundException If the storage file is not found.
+     * @throws IOException           If there's an error reading the file.
      */
     private synchronized void get() {
         try {
@@ -76,11 +82,10 @@ public class StorageThread implements Runnable {
     }
 
     /**
-     * Writes or updates the value associated with the given key from a file stored in the specified storage location.
+     * Stores or updates the value associated with the given key in the storage.
      *
-     * @throws FileNotFoundException If the file is not found at the specified storage location.
-     * @throws IOException           If an I/O error occurs while reading from the file.
-     * @throws RuntimeException      If an IOException is caught.
+     * @throws FileNotFoundException If the storage file is not found.
+     * @throws IOException           If there's an error reading or writing to the file.
      */
     private synchronized void put() {
         try {
@@ -94,8 +99,7 @@ public class StorageThread implements Runnable {
                     outPut.append(",");
                     outPut.append(value);
                     outPut.append("\n");
-                }
-                else {
+                } else {
                     outPut.append(temp[0]);
                     outPut.append(",");
                     outPut.append(value);
@@ -122,11 +126,10 @@ public class StorageThread implements Runnable {
     }
 
     /**
-     * Deletes the value associated with the given key from a file stored in the specified storage location.
+     * Removes the key-value pair associated with the given key from the storage.
      *
-     * @throws FileNotFoundException If the file is not found at the specified storage location.
-     * @throws IOException           If an I/O error occurs while reading from the file.
-     * @throws RuntimeException      If an IOException is caught.
+     * @throws FileNotFoundException If the storage file is not found.
+     * @throws IOException           If there's an error reading or writing to the file.
      */
     private synchronized void delete() {
         try {
@@ -136,8 +139,7 @@ public class StorageThread implements Runnable {
                 String[] temp = start.split(",");
                 if (temp[0].equals(key)) {
                     value = temp[1];
-                }
-                else {
+                } else {
                     outPut.append(temp[0]);
                     outPut.append(",");
                     outPut.append(value);
@@ -156,11 +158,10 @@ public class StorageThread implements Runnable {
     }
 
     /**
-     * Retrieves all data from a file stored in the specified storage location.
+     * Fetches all data from the storage.
      *
-     * @throws FileNotFoundException If the file is not found at the specified storage location.
-     * @throws IOException           If an I/O error occurs while reading from the file.
-     * @throws RuntimeException      If an IOException is caught.
+     * @throws FileNotFoundException If the storage file is not found.
+     * @throws IOException           If there's an error reading the file.
      */
     private synchronized void getAllData() {
         final BufferedReader input;
@@ -185,9 +186,9 @@ public class StorageThread implements Runnable {
     }
 
     /**
-     * Executes the given command
+     * Executes the given storage operation command.
      *
-     * @param command
+     * @param command The operation command: "get", "put", "delete", "getAll".
      */
     private void executeCommand(String command) {
         switch (command) {

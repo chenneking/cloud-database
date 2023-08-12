@@ -12,6 +12,14 @@ public class PingCommunication implements Runnable {
     private final String port;
     private final Socket clientSocket;
 
+    /**
+     * Constructor for the PingCommunication class.
+     * Initializes the ECSMessageHandler with the provided client socket and sets the IP and port.
+     *
+     * @param clientSocket The socket for communication with the client.
+     * @param ip           The IP address of the client.
+     * @param port         The port number of the client.
+     */
     public PingCommunication(Socket clientSocket, String ip, String port) {
         this.messageHandler = new ECSMessageHandler(clientSocket);
         this.clientSocket = clientSocket;
@@ -28,7 +36,6 @@ public class PingCommunication implements Runnable {
      *
      * @throws RuntimeException if the thread is interrupted while sleeping.
      */
-
     @Override
     public void run() {
         try {
@@ -54,13 +61,14 @@ public class PingCommunication implements Runnable {
         }
     }
 
-    /**
-     * Closes the connection with the client by setting the isOpen flag to false,
-     * closing the message handler and finally closing the client socket.
-     * <p>
-     * If an IOException occurs during the closing of the client socket, a RuntimeException is thrown.
-     */
 
+    /**
+     * Closes the connection with the client.
+     * <p>
+     * This involves setting the isOpen flag to false, closing the message handler,
+     * and then closing the client socket. If any issues arise while closing the client socket,
+     * a RuntimeException is thrown.
+     */
     public void closeConnection() {
         messageHandler.close();
         try {

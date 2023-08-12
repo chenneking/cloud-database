@@ -21,6 +21,13 @@ public class PersistentStorage {
         this.filename = filename;
         initializePersistentStorage();
     }
+
+    /**
+     * Fetches the value associated with a given key from the storage.
+     *
+     * @param key The key whose associated value is to be fetched.
+     * @return The key-value pair associated with the specified key, or null if the key is not present.
+     */
     public KVPair<String, String> get(String key) {
         try {
             Scanner input = new Scanner(new File("/" + storageLocation + "/" + filename));
@@ -29,7 +36,7 @@ public class PersistentStorage {
                 String[] output = input.next().split(",");
                 KVPair<String, String> kvPair = new KVPair<>(output[0], output[1]);
 
-                while (input.hasNext() & ! kvPair.getKey().equals(key)) {
+                while (input.hasNext() & !kvPair.getKey().equals(key)) {
                     output = input.next().split(",");
                     kvPair = new KVPair<>(output[0], output[1]);
                 }
@@ -50,6 +57,13 @@ public class PersistentStorage {
         }
     }
 
+    /**
+     * Stores or updates a key-value pair in the storage.
+     *
+     * @param key   The key to be stored.
+     * @param value The value associated with the key.
+     * @return The result of the put operation.
+     */
     public PutResult put(String key, String value) {
         try {
             boolean flag = false;
@@ -75,7 +89,7 @@ public class PersistentStorage {
                 }
             }
             //if the value is not in the file it just appends to file
-            if (! flag) {
+            if (!flag) {
                 String outPutString = key + "," + value + ";";
                 Files.write(
                         Paths.get("/" + storageLocation + "/" + filename),
@@ -109,6 +123,12 @@ public class PersistentStorage {
         writer.close();
     }
 
+    /**
+     * Deletes the key-value pair associated with the provided key from the storage.
+     *
+     * @param key The key whose associated value is to be deleted.
+     * @return The deleted key-value pair, or null if the key was not found.
+     */
     public KVPair<String, String> delete(String key) {
         KVPair<String, String> outPutKvPair = null;
         try {
@@ -136,7 +156,12 @@ public class PersistentStorage {
         }
     }
 
-    //has to create a data file if it does not exist already
+    /**
+     * Initializes the persistent storage. This method ensures that the storage file exists.
+     * If the file doesn't exist, it will create one.
+     *
+     * @throws RuntimeException If there's an error during storage file creation.
+     */
     public void initializePersistentStorage() {
         try {
             Scanner input = new Scanner(new File("/" + storageLocation + "/" + filename));
@@ -154,6 +179,11 @@ public class PersistentStorage {
         }
     }
 
+    /**
+     * Fetches all the data present in the storage.
+     *
+     * @return A string representation of all data in the storage.
+     */
     public String getAllData() {
         StringBuilder stringBuilder = new StringBuilder();
         Scanner input;
@@ -183,6 +213,12 @@ public class PersistentStorage {
 
     }
 
+    /**
+     * Saves a piece of data to the storage.
+     *
+     * @param data   The data to be saved.
+     * @param append A flag to indicate whether to append the data or overwrite existing data.
+     */
     public void saveData(String data, boolean append) {
         try {
             FileWriter fw = new FileWriter("/" + storageLocation + "/" + filename, append);
@@ -193,6 +229,14 @@ public class PersistentStorage {
         }
     }
 
+    /**
+     * Fetches a range of data based on key hashes from the storage.
+     *
+     * @param startKeyRange     The starting key hash for the range.
+     * @param keyRangeToSplitAt The ending key hash for the range.
+     * @param consistentHashing An instance of the ConsistentHashing class to aid in range checks.
+     * @return A string representation of the data within the specified range.
+     */
     public String getDataBetweenKeyRanges(String startKeyRange, String keyRangeToSplitAt, ConsistentHashing consistentHashing) {
         StringBuilder dataToStay = new StringBuilder();
         StringBuilder dataToTransfer = new StringBuilder();
@@ -212,8 +256,7 @@ public class PersistentStorage {
                         dataToTransfer.append(",");
                         dataToTransfer.append(input2);
                         dataToTransfer.append(";");
-                    }
-                    else {
+                    } else {
                         String input1 = output[0].replaceAll("\r\n", "");
                         String input2 = output[1].replaceAll("\r\n", "");
 
@@ -244,20 +287,17 @@ public class PersistentStorage {
     private boolean checkIfInRange(String hash, String startRange, String endRange) {
         if (startRange.compareTo(hash) < 0 && endRange.compareTo(hash) >= 0) {
             return true;
-        }
-        else if (startRange.compareTo(endRange) >= 0) {
+        } else if (startRange.compareTo(endRange) >= 0) {
             if (startRange.compareTo(hash) < 0 && endRange.compareTo(hash) <= 0) {
                 return true;
-            }
-            else return startRange.compareTo(hash) > 0 && endRange.compareTo(hash) >= 0;
+            } else return startRange.compareTo(hash) > 0 && endRange.compareTo(hash) >= 0;
         }
         return false;
     }
 
-    //adds a method to clear the file for testing purposes
 
     /**
-     * Clears a file from the given sotrage location and name
+     * Clears the storage file, removing all data.
      */
     public void clearFile() {
         try {
@@ -270,9 +310,9 @@ public class PersistentStorage {
     }
 
     /**
-     * Deletes the file given in the storage location
+     * Deletes the storage file from the system.
      *
-     * @return True if the file is deleted
+     * @return True if the file was successfully deleted, false otherwise.
      */
     public boolean deleteFile() {
         try {

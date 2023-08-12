@@ -1,6 +1,5 @@
 package org.praktikum.resources;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Bucket {
@@ -14,13 +13,20 @@ public class Bucket {
 
     private ArrayList<String> bucketList = new ArrayList<>();
 
-    public Bucket(String startRange, String endRange){
+    public Bucket(String startRange, String endRange) {
         this.startRange = startRange;
         this.endRange = endRange;
     }
 
-    public boolean insert(String key, String hash){
-        if(isRightBucket(hash)){
+    /**
+     * Inserts a key into the bucket if it belongs to the right bucket based on its hash.
+     *
+     * @param key  The key to be inserted.
+     * @param hash The hash value of the key.
+     * @return true if the key is inserted successfully, false otherwise.
+     */
+    public boolean insert(String key, String hash) {
+        if (isRightBucket(hash)) {
             // Case Update: don't store keys twice, when value is updated.
             bucketList.remove(key);
             return bucketList.add(key);
@@ -28,14 +34,21 @@ public class Bucket {
         return false;
     }
 
-    public boolean delete(String key, String hash){
-        if(isRightBucket(hash)){
+    /**
+     * Deletes a key from the bucket if it belongs to the right bucket based on its hash.
+     *
+     * @param key  The key to be deleted.
+     * @param hash The hash value of the key.
+     * @return true if the key is deleted successfully, false otherwise.
+     */
+    public boolean delete(String key, String hash) {
+        if (isRightBucket(hash)) {
             return bucketList.remove(key);
         }
         return false;
     }
 
-    public int size(){
+    public int size() {
         return bucketList.size();
     }
 
@@ -47,15 +60,19 @@ public class Bucket {
         return endRange;
     }
 
-    private boolean isRightBucket(String hash){
+    /**
+     * Checks if a given hash belongs to this bucket based on the start and end ranges.
+     *
+     * @param hash The hash value to be checked.
+     * @return true if the hash belongs to this bucket, false otherwise.
+     */
+    private boolean isRightBucket(String hash) {
         if (getStartRange().compareTo(hash) < 0 && getEndRange().compareTo(hash) >= 0) {
             return true;
-        }
-        else if (getStartRange().compareTo(getEndRange()) >= 0) {
+        } else if (getStartRange().compareTo(getEndRange()) >= 0) {
             if (getStartRange().compareTo(hash) < 0 && getEndRange().compareTo(hash) <= 0) {
                 return true;
-            }
-            else if (getStartRange().compareTo(hash) > 0 && getEndRange().compareTo(hash) >= 0) {
+            } else if (getStartRange().compareTo(hash) > 0 && getEndRange().compareTo(hash) >= 0) {
                 return true;
             }
         }

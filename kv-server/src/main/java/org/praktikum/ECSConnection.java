@@ -23,6 +23,17 @@ public class ECSConnection implements Runnable, SignalHandler {
     private final Socket socket;
     private String customEndRangeHash;
 
+    /**
+     * Constructor to initialize the ECSConnection.
+     *
+     * @param clientSocket       The socket associated with the ECS connection.
+     * @param storageUnit        The storage unit of the KVServer.
+     * @param hashing            Hashing utility (although not used directly in this class).
+     * @param kvServer           Reference to the main server.
+     * @param ip                 IP address of the server.
+     * @param port               Port number of the server.
+     * @param customEndRangeHash Custom hash value specifying end range of keys.
+     */
     public ECSConnection(Socket clientSocket, KVStore storageUnit, ConsistentHashing hashing, KVServer kvServer, String ip, int port, String customEndRangeHash) {
         this.storageUnit = storageUnit;
         this.messageHandler = new MessageHandler(clientSocket);
@@ -39,14 +50,14 @@ public class ECSConnection implements Runnable, SignalHandler {
 
 
     /**
-     * Main method of the Thread. Sends a message to the client if connected successfully
+     * Main execution method for the thread. Listens for incoming requests
+     * from the ECS and processes them.
      */
     @Override
     public void run() {
-        if (customEndRangeHash != null && ! customEndRangeHash.equals("")) {
+        if (customEndRangeHash != null && !customEndRangeHash.equals("")) {
             messageHandler.send("kvServer " + port + " " + ip + " " + customEndRangeHash);
-        }
-        else {
+        } else {
             messageHandler.send("kvServer " + port + " " + ip);
         }
         try {
@@ -56,8 +67,7 @@ public class ECSConnection implements Runnable, SignalHandler {
                     String clientRequest = new String(input, StandardCharsets.UTF_8);
                     //System.out.println(clientRequest);
                     executeRequest(clientRequest);
-                }
-                else {
+                } else {
                     //the input is null if the connected server disconnected
                     close();
                 }
@@ -68,10 +78,10 @@ public class ECSConnection implements Runnable, SignalHandler {
     }
 
     /**
-     * Executes the correct request given by the user by splitting the request into different tokens and executing the
-     * correct function
+     * Processes the incoming request from the ECS and performs the
+     * appropriate action based on the command received.
      *
-     * @param clientRequest String as the client the input
+     * @param clientRequest String representation of the ECS command.
      */
     private void executeRequest(String clientRequest) {
         received(clientRequest);
@@ -110,33 +120,31 @@ public class ECSConnection implements Runnable, SignalHandler {
                 }
                 case "data_received" -> messageHandler.send("data_key_range_sent");
             }
-        }
-        else {
+        } else {
             error();
             KVServer.log.info("Received unknown command: " + clientRequest);
         }
     }
 
     /**
-     * Sends error message to the client
+     * Sends an error message to the connected ECS.
      */
     public void error() {
         messageHandler.send("error unknown command!");
     }
 
-    //waits for the inserted message
 
     /**
-     * sends data via the message handler
+     * Sends a specific message/data to the connected ECS.
      *
-     * @param data
+     * @param data The message/data to be sent.
      */
     public void send(String data) {
         messageHandler.send(data);
     }
 
     /**
-     * Closes message handler and socket
+     * Closes the current connection and releases associated resources.
      */
     public void close() {
         isOpen = false;
@@ -149,32 +157,48 @@ public class ECSConnection implements Runnable, SignalHandler {
     }
 
     /**
-     * Deletes one Storage Unit
+     * Deletes the entire data in the server's storage unit.
      */
     public synchronized void deleteStorage() {
         System.out.println("deleting from storage in KV-Server");
         storageUnit.cleanPersistentStorage();
     }
 
+    /**
+     * Retrieves all data stored in the server's storage unit.
+     *
+     * @return A String representation of all data.
+     */
     public synchronized String getAllData() {
         return storageUnit.getAllData();
     }
 
     /**
-     * Retrives data form the storage unit that falls within the key range
+     * Retrieves data that falls within a specific key range.
      *
-     * @param keyRangeToSplitAt
-     * @return String with the data between the key range
+     * @param keyRangeToSplitAt The hash value specifying the end range.
+     * @return Data within the specified key range.
      */
     private synchronized String getDataBetweenKeyRanges(String keyRangeToSplitAt) {
         return storageUnit.getDataBetweenKeyRanges(kvServer.getStartRange(), keyRangeToSplitAt);
     }
 
+    /**
+     * Handles specific signals (like "TERM"). In this case,
+     * it ensures the connection is closed upon receiving the signal.
+     *
+     * @param sig The signal received.
+     */
     @Override
     public void handle(Signal sig) {
         close();
     }
 
+    /**
+     * Utility method to print out received messages, primarily for debugging purposes.
+     *
+     * @param string The message received.
+     */
     private void received(String string) {
         System.out.println("Received: " + string);
     }
