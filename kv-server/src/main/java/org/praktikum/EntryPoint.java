@@ -146,9 +146,8 @@ public class EntryPoint {
         flags[1] = "127.0.0.1";
         flags[4] = "logs/server.log";
 
-        //TODO: DEFAULT WERTE FÜR BUCKET COUNT UND THRESHOLD WERTE AUF OPTIMA SETZEN
-        flags[8] = "3";
-        flags[9] = "34";
+        flags[8] = "9";
+        flags[9] = "25";
         //Default for -e flag: empty string.
         flags[10] = "";
 
