@@ -90,14 +90,14 @@ public class EntryPoint {
                 "Sets the number of buckets that the keyrange of a KVServer is split up into",
                 "-bc <count>",
                 "-bc 4",
-                "3"
+                "9"
         );
         printArgumentHelp(
                 "-t",
                 "Sets the offload threshold value for a keyrange transfer between KVServers in percent",
                 "-t <threshold>",
                 "-t 33",
-                "34"
+                "25"
         );
         printArgumentHelp(
                 "-e",
@@ -105,7 +105,6 @@ public class EntryPoint {
                 "-e <endRange>",
                 "-e 60000000000000000000000000000000"
         );
-        //TODO: HIER OPTIMA IN DEFAULT VALUES UPDATEN
     }
 
     /**
