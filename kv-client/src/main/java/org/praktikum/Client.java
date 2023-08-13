@@ -336,7 +336,6 @@ public class Client implements SignalHandler {
         executeCommand(new String[]{"put", key, value});
     }
 
-    //Todo die raus oder
     public void getPublic(String key) {
         executeCommand(new String[]{"get", key});
     }
