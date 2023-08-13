@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class Generator {
-    private ConsistentHashing consistentHashing;
+    private final ConsistentHashing consistentHashing;
 
     public Generator() {
         try {
@@ -179,12 +179,24 @@ public class Generator {
 
     public static void main(String[] args) {
         Generator generator = new Generator();
-        String folder = "/Users/carl/IdeaProjects/ms5/benchmarking/big_and_random";
+        String folder = "/Users/carl/IdeaProjects/ms5/benchmarking/demo";
         generator.generateHashInRange(
-                "000B97B0B6E75689CF143CC626655902",
-                "600007FFA927B1B1E2CB7E9A7DA8A273",
-                20000,
-                folder + "/20k.csv"
+                "00000000000000000000000000000000",
+                "2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB",
+                2,
+                folder + "/bucket1.csv"
+        );
+        generator.generateHashInRange(
+                "2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB",
+                "55555555555555555555555555555556",
+                2,
+                folder + "/bucket2.csv"
+        );
+        generator.generateHashInRange(
+                "55555555555555555555555555555556",
+                "80000000000000000000000000000000",
+                2,
+                folder + "/bucket3.csv"
         );
     }
 }

@@ -12,7 +12,7 @@
         <module>ecs-server</module>
         <module>kv-client</module>
         <module>kv-server</module>
-        <module>benchmarking</module>
+        <module>key-gen</module>
     </modules>
 
 

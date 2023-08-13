@@ -8,18 +8,16 @@ import org.praktikum.resources.FrequencyTable;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class Testing {
+public class Tests {
 
     ConsistentHashing hashing = new ConsistentHashing();
 
-    public Testing() throws NoSuchAlgorithmException {
+    public Tests() throws NoSuchAlgorithmException {
     }
     
     @Test
@@ -78,8 +76,8 @@ public class Testing {
 
     @Test
     public void danaiSpielHierRum() {
-        FrequencyTable frequencyTable = new FrequencyTable(9, 50);
-        frequencyTable.createBuckets("000B97B0B6E75689CF143CC626655902","600007FFA927B1B1E2CB7E9A7DA8A273");
+        FrequencyTable frequencyTable = new FrequencyTable(3, 50);
+        frequencyTable.createBuckets("00000000000000000000000000000000","80000000000000000000000000000000");
         System.out.println(frequencyTable.getAllInfo());
     }
 
