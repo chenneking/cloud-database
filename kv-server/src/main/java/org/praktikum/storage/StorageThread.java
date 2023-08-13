@@ -195,7 +195,6 @@ public class StorageThread implements Runnable {
             case "put" -> put();
             case "get" -> get();
             case "getAll" -> getAllData();
-            //TODO: the default delete here doesn't seem right
             default -> delete();
         }
     }

@@ -60,7 +60,6 @@ public class PersistantStorageMultiThreaded {
      * @param key The key of the key-value pair to be retrieved.
      * @return The key-value pair associated with the given key, or null if the key does not exist in the storage.
      */
-    // @ToDo check if delete returns the correct values
     public KVPair<String, String> delete(String key) {
         StorageThread storageThread = new StorageThread("delete", key, null, storageLocation, FILENAME);
         storageThread.run();
